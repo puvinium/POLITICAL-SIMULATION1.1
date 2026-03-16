@@ -1,0 +1,1681 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>U.S. Presidential Campaign Simulation</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Times New Roman', serif; background: #f5efe0; color: #2c1810; min-height: 100vh; font-size: 18px; }
+h1 { text-align: center; padding: 12px; font-size: 1.5em; background: #8b1a1a; border-bottom: 2px solid #6b1010; color: #f5efe0; letter-spacing: 2px; font-style: italic; }
+
+#app { display: grid; grid-template-columns: 310px 1fr 290px; gap: 10px; padding: 10px; max-width: 1700px; margin: 0 auto; }
+.panel { background: #ede4d0; border: 1px solid #c4a882; border-radius: 6px; padding: 12px; }
+.ph { font-size: 0.8em; text-transform: uppercase; letter-spacing: 1px; color: #8b1a1a; border-bottom: 1px solid #c4a882; padding-bottom: 5px; margin-bottom: 10px; font-weight: bold; }
+.sh { font-size: 0.78em; text-transform: uppercase; letter-spacing: 0.5px; color: #1a3a5c; margin: 9px 0 5px; font-weight: bold; }
+
+#hbar { display: flex; justify-content: space-between; align-items: center; background: #8b1a1a; border: 1px solid #6b1010; border-radius: 6px; padding: 8px 14px; margin-bottom: 0; flex-wrap: wrap; gap: 6px; color: #f5efe0; }
+.hst { text-align: center; min-width: 60px; }
+.hst .hl { font-size: 0.7em; color: #f0d0b0; text-transform: uppercase; letter-spacing: 0.5px; }
+.hst .hv { font-size: 1.25em; font-weight: bold; }
+#btn-next { background: #1a3a5c; color: #f5efe0; border: none; border-radius: 4px; padding: 9px 22px; cursor: pointer; font-weight: bold; font-size: 1em; font-family: 'Times New Roman', serif; letter-spacing: 0.5px; }
+#btn-next:hover { background: #254d80; }
+#btn-next:disabled { background: #888; cursor: not-allowed; }
+
+.srow { margin-bottom: 7px; }
+.srow label { font-size: 0.84em; margin-bottom: 2px; display:block; color: #2c1810; }
+.srow .ends { display: flex; justify-content: space-between; font-size: 0.7em; color: #8b7050; margin-top: 1px; }
+.btn-grp { display: flex; gap: 3px; margin: 3px 0; }
+.pb { flex:1; background:#f0e8d8; border:1px solid #c4a882; color:#6b5740; border-radius:3px; padding:5px 0; font-size:0.84em; cursor:pointer; font-weight:bold; font-family:'Times New Roman',serif; transition:border-color 0.12s,color 0.12s; }
+.pb:hover:not(:disabled) { border-color:#1a3a5c; color:#2c1810; }
+.pb.sel { background:#1a3a5c; border-color:#1a3a5c; color:#f5efe0; }
+.pb.sel.g { background:#2d6a2d; border-color:#3a8a3a; }
+.pb.sel.o { background:#b87333; border-color:#d4914a; }
+.pb.sel.r { background:#8b1a1a; border-color:#b02020; }
+.pb.sel.p { background:#5c1a6b; border-color:#7a2090; }
+.pb:disabled { opacity: 0.35; cursor: not-allowed; }
+
+#cp-bar-wrap { margin-bottom: 8px; }
+#cp-bar-bg { background: #d8cbb8; border-radius: 4px; height: 10px; overflow: hidden; }
+#cp-bar-fill { height: 100%; border-radius: 4px; background: #1a3a5c; transition: width 0.2s; }
+#cp-label { display: flex; justify-content: space-between; font-size: 0.82em; margin-bottom: 3px; }
+
+.def-bg { background: #d8cbb8; border-radius: 4px; height: 7px; overflow: hidden; margin-top: 4px; }
+.def-fill { height: 100%; border-radius: 4px; transition: width 0.3s, background 0.3s; }
+
+#map-wrap { overflow-x: auto; }
+#map-svg { width: 100%; display: block; }
+.st { cursor: pointer; }
+.st .sr { transition: filter 0.1s; }
+.st:hover { filter: brightness(1.15); }
+
+#legend { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 8px; font-size: 0.82em; align-items: center; }
+.leg { display: flex; align-items: center; gap: 4px; }
+.lb { width: 13px; height: 13px; border-radius: 3px; }
+
+#smod { display:none; position:fixed; inset:0; background:rgba(44,24,16,0.80); z-index:10000; align-items:center; justify-content:center; }
+#smod.show { display:flex; }
+#smod-box { background:#f5efe0; border:2px solid #8b1a1a; border-radius:8px; padding:20px; max-width:720px; width:94%; max-height:88vh; overflow-y:auto; position:relative; }
+#smod-close { position:absolute; top:10px; right:13px; background:none; border:none; color:#8b1a1a; font-size:1.4em; cursor:pointer; line-height:1; font-family:'Times New Roman',serif; }
+#smod-close:hover { color:#2c1810; }
+.smod-section { font-size:0.78em; text-transform:uppercase; letter-spacing:1px; color:#8b1a1a; border-bottom:1px solid #c4a882; padding-bottom:4px; margin:12px 0 8px; font-weight:bold; }
+.pol-row { display:grid; align-items:center; padding:5px 0; border-bottom:1px solid #d8cbb8; }
+
+#tip { position:fixed; pointer-events:none; z-index:9999; background:#f0e8d8; border:1px solid #c4a882; border-radius:6px; padding:10px 13px; font-size:0.84em; min-width:210px; max-width:270px; display:none; box-shadow:0 4px 20px rgba(44,24,16,0.3); color:#2c1810; }
+.tt { font-weight:bold; font-size:1.05em; margin-bottom:6px; border-bottom:1px solid #c4a882; padding-bottom:5px; }
+.tr { display:flex; justify-content:space-between; gap:10px; margin-bottom:2px; }
+.tag { display:inline-block; background:#e8dfc8; border-radius:12px; padding:2px 8px; margin:2px 2px 0 0; font-size:0.88em; color:#2c1810; border:1px solid #c4a882; }
+.tag.match { border-color:#2d6a2d; color:#2d6a2d; }
+.tag.mismatch { border-color:#8b1a1a; color:#8b1a1a; }
+
+.coal { margin-bottom:6px; padding:7px 9px; border-radius:4px; border:1px solid #c4a882; font-size:0.82em; cursor:pointer; transition:border-color 0.15s; background:#f0e8d8; }
+.coal .cn { font-weight:bold; margin-bottom:2px; }
+.coal .cprog { height:5px; border-radius:3px; background:#d8cbb8; overflow:hidden; margin-top:3px; }
+.coal .cfill { height:100%; border-radius:3px; transition:width 0.3s; }
+
+#log { font-size:0.82em; color:#6b5740; overflow-y:auto; max-height:120px; }
+#log p { border-bottom:1px solid #d8cbb8; padding:3px 0; }
+#log p:first-child { color:#2c1810; }
+
+.ccard { margin-bottom:7px; padding:8px; border-radius:4px; border-left:3px solid #c4a882; background:#f0e8d8; }
+.cn2 { font-size:0.9em; font-weight:bold; margin-bottom:3px; }
+.cs { font-size:0.78em; color:#6b5740; line-height:1.5; }
+
+.sr2 { display:flex; align-items:center; gap:6px; margin-bottom:5px; font-size:0.84em; }
+.sr2 label { min-width:70px; color:#6b5740; }
+.sr2 input[type=color] { width:28px; height:20px; border:1px solid #c4a882; border-radius:3px; cursor:pointer; padding:1px; background:none; }
+.sr2 select, .sr2 input[type=text] { flex:1; background:#f5efe0; border:1px solid #c4a882; color:#2c1810; border-radius:3px; padding:3px 5px; font-size:0.92em; font-family:'Times New Roman',serif; }
+.btn-sm { width:100%; background:#1a3a5c; color:#f5efe0; border:none; border-radius:4px; padding:7px; cursor:pointer; font-size:0.88em; font-weight:bold; margin-top:8px; font-family:'Times New Roman',serif; }
+.btn-sm:hover { background:#254d80; }
+
+.elim-badge { font-size:0.72em; background:#8b1a1a; color:#f5efe0; border-radius:10px; padding:1px 6px; margin-left:5px; }
+
+#gover { display:none; position:fixed; inset:0; background:rgba(44,24,16,0.88); z-index:9999; align-items:center; justify-content:center; }
+#gover.show { display:flex; }
+#gb { background:#f5efe0; border:2px solid #8b1a1a; border-radius:8px; padding:36px; text-align:center; max-width:860px; width:90vw; }
+#go-map-svg { width:100%; margin:16px 0 8px; border-radius:4px; border:1px solid #c4a882; display:block; }
+#gb h2 { font-size:1.9em; margin-bottom:10px; color:#2c1810; font-style:italic; }
+#gb p { color:#6b5740; margin-bottom:18px; font-size:1em; }
+#btn-r { background:#8b1a1a; color:#f5efe0; border:none; border-radius:4px; padding:9px 26px; cursor:pointer; font-weight:bold; font-family:'Times New Roman',serif; font-size:1em; }
+
+.lcol { display:flex; flex-direction:column; max-height:calc(100vh - 110px); gap:10px; }
+.lcol .policy-panel { flex:1 1 0; overflow-y:auto; min-height:0; }
+.lcol .funds-panel-wrap { flex-shrink:0; }
+#funds-panel { max-height:35vh; overflow-y:auto; }
+.rcol { overflow-y:auto; max-height:calc(100vh - 110px); }
+#cp-warn { font-size:0.68em; color:#8b1a1a; margin-top:3px; min-height:14px; font-style:italic; }
+
+@media (max-width: 768px) {
+  body { font-size: 13px; }
+  #app { grid-template-columns: 1fr; gap: 6px; padding: 6px; }
+  .lcol { max-height: none; order: 2; gap: 6px; }
+  .lcol .policy-panel { flex: none; overflow-y: visible; min-height: auto; }
+  #funds-panel { max-height: none; overflow-y: visible; }
+  .rcol { max-height: none; overflow-y: visible; order: 3; }
+  #map-wrap { overflow: hidden; }
+  #map-svg { width: 100%; min-width: unset; height: auto; display: block; }
+  .panel { padding: 8px; }
+  .ph { font-size: 0.85em; padding-bottom: 4px; margin-bottom: 6px; }
+  .slider-row label { font-size: 0.72em; }
+  input[type=range] { height: 16px; }
+  #hbar { font-size: 0.78em; padding: 6px 10px; gap: 4px; }
+  .hst { font-size: 0.78em; }
+  #btn-next { font-size: 0.85em; padding: 6px 12px; }
+  .coal { padding: 5px; margin-bottom: 4px; }
+  .cn { font-size: 0.82em; }
+  #gb { padding: 14px; }
+  #go-map-svg { display: none; }
+  #smod-inner { padding: 12px; font-size: 0.9em; }
+}
+</style>
+</head>
+<body>
+<h1>U.S. Presidential Campaign Simulation</h1>
+
+<div style="padding:0 10px 10px;max-width:1700px;margin:0 auto;">
+<div id="hbar">
+  <div class="hst"><div class="hl">Week</div><div class="hv" id="hd-wk">1/26</div></div>
+  <div class="hst"><div class="hl">Your EV</div><div class="hv" id="hd-evp">0</div></div>
+  <div class="hst" id="hst-a1"><div class="hl" id="hl-a1">Opp 1 EV</div><div class="hv" id="hd-evai1">0</div></div>
+  <div class="hst" id="hst-a2"><div class="hl" id="hl-a2">Opp 2 EV</div><div class="hv" id="hd-evai2">0</div></div>
+  <div class="hst" id="hst-a3"><div class="hl" id="hl-a3">Opp 3 EV</div><div class="hv" id="hd-evai3">0</div></div>
+  <div class="hst"><div class="hl">Policy</div><div class="hv" id="hd-cp">0/1</div></div>
+  <div class="hst"><div class="hl">Funds</div><div class="hv" id="hd-money">$50M</div></div>
+  <button id="btn-next">Next Week</button>
+</div>
+</div>
+
+<div id="app">
+<div class="lcol">
+  <div class="panel policy-panel">
+    <div class="ph">Your Policy Platform</div>
+    <div id="cp-bar-wrap">
+      <div id="cp-label"><span style="color:#6b5740">Policy Changes This Turn</span><span id="cp-used" style="color:#1a3a5c">0 / 1</span></div>
+      <div id="cp-bar-bg"><div id="cp-bar-fill" style="width:0%"></div></div>
+      <div id="cp-warn"></div>
+      <div style="font-size:0.63em;color:#8b7050;margin-top:2px">One policy change per turn. Win coalitions to earn campaign funds.</div>
+    </div>
+    <div class="sh">Income Tax Rates</div>
+    <div id="sl-tax"></div>
+    <div class="sh">Tariffs</div>
+    <div id="sl-tariff"></div>
+    <div class="sh">Government Spending</div>
+    <div id="sl-spend"></div>
+    <div class="sh">Social &amp; Other Policy</div>
+    <div id="sl-social"></div>
+  </div>
+  <div class="panel funds-panel-wrap">
+    <div class="ph">Campaign Funds</div>
+    <div id="funds-panel"></div>
+  </div>
+</div>
+
+<div class="panel">
+  <div class="ph">Electoral Map — click states to view details &amp; spend funds</div>
+  <div id="legend">
+    <div class="leg"><div class="lb" id="lgb-p"></div><span id="lgn-p">You</span></div>
+    <div class="leg"><div class="lb" id="lgb-a1"></div><span id="lgn-a1">Opp 1</span></div>
+    <div class="leg" id="leg-a2"><div class="lb" id="lgb-a2"></div><span id="lgn-a2">Opp 2</span></div>
+    <div class="leg" id="leg-a3"><div class="lb" id="lgb-a3"></div><span id="lgn-a3">Opp 3</span></div>
+    <div class="leg"><div class="lb" style="background:#c4b898;border:1px solid #a09070"></div>Toss-up</div>
+  </div>
+  <div id="map-wrap">
+    <svg id="map-svg" viewBox="0 0 790 630" xmlns="http://www.w3.org/2000/svg"></svg>
+  </div>
+  <div class="panel" style="margin-top:10px;padding:10px">
+    <div class="ph">State Coalitions — win all states to earn campaign funds</div>
+    <div id="coal-list"></div>
+  </div>
+  <div class="panel" style="margin-top:10px;padding:10px">
+    <div class="ph">Turn Log</div>
+    <div id="log"></div>
+  </div>
+</div>
+
+<div class="rcol">
+  <div class="panel" style="margin-bottom:10px">
+    <div class="ph">Game Setup</div>
+    <div class="sh">Coalition Mode</div>
+    <div class="sr2">
+      <label>Mode</label>
+      <select id="cfg-coal-mode">
+        <option value="policy">Issue-Based</option>
+        <option value="demo">Demographic</option>
+      </select>
+    </div>
+    <div class="sh">Difficulty</div>
+    <div class="sr2">
+      <label>AI Level</label>
+      <select id="cfg-diff">
+        <option value="easy">Easy</option>
+        <option value="medium" selected>Medium</option>
+        <option value="hard">Hard</option>
+      </select>
+    </div>
+    <div class="sh">Number of Opponents</div>
+    <div class="sr2">
+      <label>Opponents</label>
+      <select id="cfg-nopp">
+        <option value="1">1 opponent</option>
+        <option value="2">2 opponents</option>
+        <option value="3" selected>3 opponents</option>
+      </select>
+    </div>
+    <div class="sh">Your Candidate</div>
+    <div class="sr2"><label>Name</label><input type="text" id="cfg-np" value="You" maxlength="16"></div>
+    <div class="sr2"><label>Color</label><input type="color" id="cfg-cp" value="#30b300"></div>
+    <div class="sh" id="sh-a1">Opponent 1</div>
+    <div class="sr2"><label>Name</label><input type="text" id="cfg-na1" value="Rep. Hart" maxlength="16"></div>
+    <div class="sr2"><label>Color</label><input type="color" id="cfg-ca1" value="#ff0000"></div>
+    <div class="sr2"><label>Ideology</label>
+      <select id="cfg-ia1">
+        <option>Far Left</option><option>Left</option><option>Center-Left</option><option>Center</option>
+        <option selected>Center-Right</option><option>Right</option><option>Far Right</option>
+      </select>
+    </div>
+    <div id="opp2-setup">
+    <div class="sh" id="sh-a2">Opponent 2</div>
+    <div class="sr2"><label>Name</label><input type="text" id="cfg-na2" value="Gov. Rivera" maxlength="16"></div>
+    <div class="sr2"><label>Color</label><input type="color" id="cfg-ca2" value="#0085ff"></div>
+    <div class="sr2"><label>Ideology</label>
+      <select id="cfg-ia2">
+        <option>Far Left</option><option selected>Left</option><option>Center-Left</option><option>Center</option>
+        <option>Center-Right</option><option>Right</option><option>Far Right</option>
+      </select>
+    </div>
+    </div>
+    <div id="opp3-setup">
+    <div class="sh" id="sh-a3">Opponent 3</div>
+    <div class="sr2"><label>Name</label><input type="text" id="cfg-na3" value="Sen. Walsh" maxlength="16"></div>
+    <div class="sr2"><label>Color</label><input type="color" id="cfg-ca3" value="#fff100"></div>
+    <div class="sr2"><label>Ideology</label>
+      <select id="cfg-ia3">
+        <option>Far Left</option><option>Left</option><option>Center-Left</option><option selected>Center</option>
+        <option>Center-Right</option><option>Right</option><option>Far Right</option>
+      </select>
+    </div>
+    </div>
+    <button class="btn-sm" id="btn-apply">Apply &amp; Restart</button>
+  </div>
+  <div class="panel">
+    <div class="ph">Candidates</div>
+    <div id="cand-cards"></div>
+  </div>
+</div>
+</div>
+
+<div id="tip">
+  <div class="tt" id="tt-name"></div>
+  <div id="tt-polls"></div>
+  <div style="margin-top:7px;border-top:1px solid #c4a882;padding-top:6px">
+    <div style="font-size:0.85em;color:#6b5740;margin-bottom:4px">Voter priorities — match/mismatch = your alignment</div>
+    <div id="tt-tags"></div>
+  </div>
+  <div id="tt-rhet" style="margin-top:5px;font-size:0.8em"></div>
+</div>
+
+<div id="smod" onclick="if(event.target===this)closeSmod()">
+  <div id="smod-box">
+    <button id="smod-close" onclick="closeSmod()">X</button>
+    <div id="smod-title" style="font-size:1.15em;font-weight:bold;color:#2c1810;margin-bottom:4px;padding-right:24px;font-style:italic"></div>
+    <div id="smod-lean" style="font-size:0.78em;color:#6b5740;margin-bottom:10px"></div>
+    <div class="smod-section">Current Polls</div>
+    <div id="smod-polls"></div>
+    <div class="smod-section">Top Voter Priorities &amp; Candidate Alignment</div>
+    <div style="font-size:0.71em;color:#6b5740;margin-bottom:8px">Sorted by what voters here care about most.</div>
+    <div id="smod-policies"></div>
+    <div class="smod-section" id="smod-spend-hdr">Spend Campaign Funds</div>
+    <div id="smod-spend"></div>
+  </div>
+</div>
+
+<div id="gover">
+  <div id="gb">
+    <h2 id="go-ttl">Result</h2>
+    <p id="go-body"></p>
+    <svg id="go-map-svg" viewBox="0 0 790 630" xmlns="http://www.w3.org/2000/svg"></svg>
+    <button id="btn-r">Play Again</button>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// POLICIES  [id, label, left-end, right-end, colorClass, defaultVal]
+// 12 policies: tax_low, tax_high, tar_e, tar_l,
+//              sp_h, sp_m, sp_w,
+//              immig, lao, guns, abort, enrg
+// ============================================================
+const POL_TAX = [
+  ['tax_low',  'Low Income Tax',  '0%','50%','g',0],
+  ['tax_high', 'High Income Tax', '20%','80%','g',0],
+];
+const POL_TARIFF = [
+  ['tar_e', 'Energy Tariff',        'Free','Heavy','o',0],
+  ['tar_l', 'Manufacturing Tariff', 'Free','Heavy','o',0],
+];
+const POL_SPEND = [
+  ['sp_h','Healthcare Spending',  'Minimal','Universal','p',0],
+  ['sp_m','Military Spending',    'Minimal','Maximum',  'r',0],
+  ['sp_w','Welfare & Safety Net', 'Minimal','Generous', 'p',0],
+];
+const POL_SOCIAL = [
+  ['immig','Immigration Policy','Restrictive','Open',    '',0],
+  ['lao',  'Law & Order',       'Lenient',   'Strict',  '',0],
+  ['guns', 'Gun Control',       'Minimal',   'Strict',  '',0],
+  ['abort','Abortion Access',   'Restrict',  'Protect', '',0],
+  ['enrg', 'Energy Policy',     'Fossil',    'Renewable','',0],
+];
+const ALL_P = [...POL_TAX,...POL_TARIFF,...POL_SPEND,...POL_SOCIAL];
+const PIDS = ALL_P.map(p=>p[0]);
+const IDX = {};
+PIDS.forEach((id,i)=>{ IDX[id]=i; });
+
+function defPols(){ const o={}; PIDS.forEach(id=>{o[id]=0;}); return o; }
+
+// Liberal direction per policy index (+1 = positive is liberal, -1 = positive is conservative, 0 = skip)
+// Order: tax_low, tax_high, tar_e, tar_l, sp_h, sp_m, sp_w, immig, lao, guns, abort, enrg
+const LEAN_DIR = [0, +1, -1, -1, +1, -1, +1, +1, -1, +1, +1, +1];
+
+const LIB_IDS = ['immig','guns','abort','enrg','sp_h','sp_w'];
+const CON_IDS  = ['lao','sp_m','tar_e','tar_l'];
+
+// ============================================================
+// IDEOLOGIES (snapped to -2/0/+2)
+// ============================================================
+const IDEO = {
+  'Far Left':    {tax_low:-2,tax_high:+2,tar_e:-2,tar_l:-2,sp_h:+2,sp_m:-2,sp_w:+2,immig:+2,lao:-2,guns:+2,abort:+2,enrg:+2},
+  'Left':        {tax_low:-2,tax_high:+2,tar_e:-2,tar_l:-2,sp_h:+2,sp_m:-2,sp_w:+2,immig:+2,lao:-2,guns:+2,abort:+2,enrg:+2},
+  'Center-Left': {tax_low:-2,tax_high:+2,tar_e:-2,tar_l: 0,sp_h:+2,sp_m: 0,sp_w:+2,immig:+2,lao: 0,guns:+2,abort:+2,enrg:+2},
+  'Center':      {tax_low: 0,tax_high: 0,tar_e: 0,tar_l: 0,sp_h: 0,sp_m: 0,sp_w: 0,immig: 0,lao: 0,guns: 0,abort: 0,enrg: 0},
+  'Center-Right':{tax_low: 0,tax_high:-2,tar_e: 0,tar_l: 0,sp_h:-2,sp_m:+2,sp_w:-2,immig:-2,lao:+2,guns:-2,abort:-2,enrg:-2},
+  'Right':       {tax_low:-2,tax_high:-2,tar_e: 0,tar_l:+2,sp_h:-2,sp_m:+2,sp_w:-2,immig:-2,lao:+2,guns:-2,abort:-2,enrg:-2},
+  'Far Right':   {tax_low:-2,tax_high:-2,tar_e:+2,tar_l:+2,sp_h:-2,sp_m:+2,sp_w:-2,immig:-2,lao:+2,guns:-2,abort:-2,enrg:-2},
+};
+
+// ============================================================
+// COALITIONS
+// ============================================================
+const POLICY_COALITIONS = [
+  {name:'Low Tax Belt',            polId:'tax_low',  dir:'lo', threshold:-2, bonus:3, color:'#b87333', labelKey:'Low Tax Priority'},
+  {name:'Progressive Coast',       polId:'enrg',     dir:'hi', threshold:2,  bonus:3, color:'#1a3a5c', labelKey:'Clean Energy'},
+  {name:'Libertarian League',      polId:'guns',     dir:'lo', threshold:-2, bonus:2, color:'#5c1a6b', labelKey:'2nd Amendment Rights'},
+  {name:'Healthcare Advocates',    polId:'sp_h',     dir:'hi', threshold:2,  bonus:3, color:'#1a5c5c', labelKey:'Universal Healthcare'},
+  {name:'Bible Belt',              polId:'abort',    dir:'lo', threshold:-2, bonus:2, color:'#8b1a1a', labelKey:'Pro-Life'},
+  {name:'Tax the Wealthy',         polId:'tax_high', dir:'hi', threshold:2,  bonus:3, color:'#2d4a7a', labelKey:'Tax the Wealthy'},
+  {name:'Border States',           polId:'immig',    dir:'lo', threshold:-2, bonus:3, color:'#6b4010', labelKey:'Restrictive Immigration'},
+  {name:'Criminal Justice Reform', polId:'lao',      dir:'lo', threshold:-2, bonus:3, color:'#2d4a1a', labelKey:'Criminal Justice Reform'},
+];
+
+const DEMO_COALITIONS = [
+  {name:'White Voters',   states:['ME','NH','VT','WV','WY','MT','UT','OH','IN','MI','PA','MA','CT','RI','NJ'], bonus:4, color:'#8b7355', desc:'Majority-white states'},
+  {name:'Black Voters',   states:['LA','AL','MS','GA','MD','DC','NC','SC','VA'],                               bonus:3, color:'#2d1a5c', desc:'High Black population'},
+  {name:'Latino Voters',  states:['CA','NM','TX','AZ','NV','FL'],                                             bonus:4, color:'#8b3a1a', desc:'High Latino population'},
+  {name:'Wealthy',        states:['DC','MA','NJ','MD','NH','CA'],                                             bonus:4, color:'#8b6914', desc:'High-income states'},
+  {name:'Low-Income',     states:['AK','TN','AL','KS','MO','NM'],                                           bonus:3, color:'#5c4a2d', desc:'Low-income states'},
+  {name:'Rural',          states:['ME','VT','WV','MS','MT','ND','SD','NE','KS','IA','MO','AR','TN','KY','PA','MD'], bonus:3, color:'#2d5c2d', desc:'Rural states'},
+  {name:'Urban',          states:['CA','TX','FL','NY','IL'],                                                  bonus:4, color:'#1a4a6b', desc:'Major urban states'},
+];
+
+let COALITIONS = POLICY_COALITIONS;
+
+function getCoalStates(coal) {
+  if (!G.states) return [];
+  // Demographic coalitions use explicit state lists
+  if (coal.states) return coal.states.filter(id => G.states.some(s => s.id === id));
+  return G.states.filter(st => {
+    const v = (st.pBase || st.p)[IDX[coal.polId]]; // use original priorities only
+    return coal.dir === 'lo' ? v <= coal.threshold : v >= coal.threshold;
+  }).map(s => s.id);
+}
+
+// ============================================================
+// TILE CARTOGRAM
+// ============================================================
+const CELL=20, GAP=2, S=CELL+GAP;
+const STATE_TILES=[
+  ['WA', 2, 5,3,4],['OR', 2, 9,2,4],['CA', 0,13,5,11],
+  ['AK', 0,27,2,2],['HI', 3,27,2,2],
+  ['ID', 6, 6,2,2],['MT', 8, 5,2,2],['WY', 8, 7,2,2],
+  ['NV', 5,10,2,3],['UT', 7,10,2,3],['CO', 8,13,2,5],
+  ['AZ', 5,14,3,4],['NM', 8,18,2,3],
+  ['ND',10, 5,2,2],['SD',10, 7,2,2],['NE',10,10,2,3],
+  ['KS',10,13,2,3],['OK',10,17,3,3],['TX',10,21,5,8],
+  ['MN',13, 5,2,5],['WI',15, 5,2,5],['MI',17, 5,4,4],
+  ['IA',13,10,2,3],['IL',15,10,4,5],['IN',19,10,3,4],['OH',22,10,4,4],
+  ['MO',13,13,2,5],['KY',19,14,3,3],['TN',17,17,4,3],
+  ['AR',13,18,2,3],['MS',15,21,2,3],['AL',17,21,3,3],['LA',15,24,2,4],
+  ['WV',22,14,2,2],['VA',24,14,4,3],['NC',22,17,4,4],
+  ['SC',26,21,3,3],['GA',22,21,4,4],['FL',22,25,6,5],
+  ['PA',26, 9,5,4],['NY',26, 2,4,7],['NJ',31, 9,2,7],
+  ['DE',33,10,1,3],['MD',33,13,2,5],
+  ['CT',33, 5,2,4],['RI',35, 5,1,4],
+  ['MA',31, 2,4,3],['VT',31, 0,2,2],['NH',33, 0,2,2],['ME',35, 0,2,2],
+];
+
+// ============================================================
+// STATE DATA — each state has 3-4 focused priorities at ±2, rest 0
+// p[12] order: tax_low(0), tax_high(1), tar_e(2), tar_l(3),
+//              sp_h(4), sp_m(5), sp_w(6),
+//              immig(7), lao(8), guns(9), abort(10), enrg(11)
+// Coalitions (6 states each):
+//   Low Tax Belt      : tax_low=-2  → NE,NV,NH,SD,TN,TX,WA
+//   Libertarian League: guns=-2     → AK,ID,MT,ND,OK,WY
+//   Bible Belt        : abort=-2    → AL,AR,KY,LA,MS,SC
+//   Border States     : immig=-2    → AZ,FL,GA,OK,TX,WY
+//   Progressive Coast : enrg=+2    → CA,CO,HI,OR,VT,WA
+//   Healthcare Adv.   : sp_h=+2    → CT,IL,MA,MD,MN,NJ
+//   Criminal Justice  : lao=-2     → CA,IL,MN,NY,OR,VT
+//   Tax the Wealthy   : tax_high=+2 → CA,CT,MA,MN,NY,VT
+// ============================================================
+const SD_RAW = [
+  {id:'AL',name:'Alabama',       lean:-75,ev: 9, p:[ 0, 0, 0, 0, 0,+2, 0, 0,+2, 0,-2, 0]},
+  {id:'AK',name:'Alaska',        lean:-30,ev: 3, p:[ 0, 0,+2, 0, 0,+2, 0, 0, 0,-2, 0, 0]},
+  {id:'AZ',name:'Arizona',       lean: -5,ev:11, p:[ 0,-2, 0, 0, 0, 0, 0,-2,+2,-2, 0, 0]},
+  {id:'AR',name:'Arkansas',      lean:-70,ev: 6, p:[ 0, 0, 0,+2, 0, 0, 0, 0,+2, 0,-2, 0]},
+  {id:'CA',name:'California',    lean: 80,ev:54, p:[ 0,+2, 0, 0, 0, 0, 0, 0,-2, 0, 0,+2]},
+  {id:'CO',name:'Colorado',      lean: 35,ev:10, p:[ 0, 0, 0, 0, 0, 0, 0, 0,-2,+2, 0,+2]},
+  {id:'CT',name:'Connecticut',   lean: 55,ev: 7, p:[ 0,+2, 0, 0,+2, 0, 0, 0, 0, 0,+2, 0]},
+  {id:'DC',name:'D.C.',          lean: 95,ev: 3, p:[ 0,+2, 0, 0,+2, 0, 0,+2,-2,+2, 0, 0]},
+  {id:'DE',name:'Delaware',      lean: 55,ev: 3, p:[ 0, 0, 0, 0, 0, 0,+2, 0, 0,+2, 0, 0]},
+  {id:'FL',name:'Florida',       lean:-15,ev:30, p:[ 0, 0, 0, 0, 0,+2, 0,-2,+2,-2, 0, 0]},
+  {id:'GA',name:'Georgia',       lean: -5,ev:16, p:[ 0, 0, 0, 0, 0,+2, 0,-2,+2, 0,-2, 0]},
+  {id:'HI',name:'Hawaii',        lean: 75,ev: 4, p:[ 0,+2, 0, 0, 0, 0, 0,+2, 0,+2, 0,+2]},
+  {id:'ID',name:'Idaho',         lean:-70,ev: 4, p:[ 0,-2, 0, 0, 0, 0, 0,-2,+2,-2, 0, 0]},
+  {id:'IL',name:'Illinois',      lean: 55,ev:19, p:[ 0, 0, 0, 0,+2, 0, 0, 0,-2,+2, 0, 0]},
+  {id:'IN',name:'Indiana',       lean:-55,ev:11, p:[ 0, 0, 0,+2, 0,+2, 0, 0,+2, 0, 0, 0]},
+  {id:'IA',name:'Iowa',          lean:-20,ev: 6, p:[ 0,-2, 0,+2, 0, 0, 0, 0,+2, 0, 0, 0]},
+  {id:'KS',name:'Kansas',        lean:-65,ev: 6, p:[ 0,-2, 0, 0, 0,+2, 0, 0,+2, 0, 0, 0]},
+  {id:'KY',name:'Kentucky',      lean:-70,ev: 8, p:[ 0, 0, 0, 0, 0, 0, 0, 0,+2, 0,-2,-2]},
+  {id:'LA',name:'Louisiana',     lean:-65,ev: 8, p:[ 0, 0,+2, 0, 0, 0, 0, 0,+2, 0,-2, 0]},
+  {id:'ME',name:'Maine',         lean: 30,ev: 4, p:[ 0, 0, 0,+2, 0, 0,+2, 0, 0, 0, 0, 0]},
+  {id:'MD',name:'Maryland',      lean: 65,ev:10, p:[ 0,+2, 0, 0,+2, 0,+2, 0, 0,+2, 0, 0]},
+  {id:'MA',name:'Massachusetts', lean: 75,ev:11, p:[ 0,+2, 0, 0,+2, 0, 0, 0, 0,+2, 0, 0]},
+  {id:'MI',name:'Michigan',      lean: 10,ev:15, p:[ 0, 0, 0,+2,+2, 0,+2, 0, 0,+2, 0, 0]},
+  {id:'MN',name:'Minnesota',     lean: 30,ev:10, p:[ 0,+2, 0, 0,+2, 0, 0, 0,-2, 0, 0, 0]},
+  {id:'MS',name:'Mississippi',   lean:-70,ev: 6, p:[ 0, 0, 0, 0, 0,+2, 0, 0,+2, 0,-2, 0]},
+  {id:'MO',name:'Missouri',      lean:-55,ev:10, p:[ 0, 0, 0,+2, 0,+2, 0, 0,+2, 0, 0, 0]},
+  {id:'MT',name:'Montana',       lean:-45,ev: 4, p:[ 0, 0, 0, 0, 0, 0, 0, 0,+2,-2, 0,-2]},
+  {id:'NE',name:'Nebraska',      lean:-55,ev: 5, p:[-2, 0, 0,+2, 0, 0, 0, 0,+2, 0, 0, 0]},
+  {id:'NV',name:'Nevada',        lean: 10,ev: 6, p:[-2, 0, 0, 0, 0, 0, 0,+2, 0, 0, 0, 0]},
+  {id:'NH',name:'New Hampshire', lean: 20,ev: 4, p:[-2, 0, 0, 0, 0,-2, 0, 0, 0,-2, 0, 0]},
+  {id:'NJ',name:'New Jersey',    lean: 55,ev:14, p:[ 0,+2, 0, 0,+2, 0,+2, 0, 0,+2, 0, 0]},
+  {id:'NM',name:'New Mexico',    lean: 40,ev: 5, p:[ 0, 0, 0, 0, 0, 0,+2,+2, 0, 0, 0, 0]},
+  {id:'NY',name:'New York',      lean: 70,ev:28, p:[ 0,+2, 0, 0, 0, 0,+2, 0,-2, 0, 0, 0]},
+  {id:'NC',name:'North Carolina',lean: -5,ev:16, p:[ 0, 0, 0, 0, 0, 0,+2,-2,+2,-2, 0, 0]},
+  {id:'ND',name:'North Dakota',  lean:-70,ev: 3, p:[ 0,-2, 0, 0, 0, 0, 0, 0,+2,-2, 0, 0]},
+  {id:'OH',name:'Ohio',          lean:-15,ev:17, p:[ 0, 0, 0,+2,+2, 0,+2, 0,+2, 0, 0, 0]},
+  {id:'OK',name:'Oklahoma',      lean:-70,ev: 7, p:[ 0, 0, 0, 0, 0, 0, 0,-2,+2,-2, 0, 0]},
+  {id:'OR',name:'Oregon',        lean: 55,ev: 8, p:[ 0, 0, 0, 0, 0, 0,+2, 0,-2, 0, 0,+2]},
+  {id:'PA',name:'Pennsylvania',  lean:  5,ev:19, p:[ 0, 0, 0,+2,+2, 0,+2, 0,+2, 0, 0, 0]},
+  {id:'RI',name:'Rhode Island',  lean: 65,ev: 4, p:[ 0, 0, 0, 0, 0, 0,+2, 0, 0, 0,+2, 0]},
+  {id:'SC',name:'South Carolina',lean:-55,ev: 9, p:[ 0, 0, 0, 0, 0,+2, 0,-2,+2, 0,-2, 0]},
+  {id:'SD',name:'South Dakota',  lean:-65,ev: 3, p:[-2, 0, 0, 0, 0,+2, 0, 0,+2, 0, 0, 0]},
+  {id:'TN',name:'Tennessee',     lean:-65,ev:11, p:[-2, 0, 0, 0, 0,+2, 0, 0,+2, 0,-2, 0]},
+  {id:'TX',name:'Texas',         lean:-30,ev:40, p:[-2, 0, 0, 0, 0, 0, 0,-2, 0,-2, 0,-2]},
+  {id:'UT',name:'Utah',          lean:-35,ev: 6, p:[ 0,-2, 0, 0, 0,+2, 0, 0,+2, 0, 0, 0]},
+  {id:'VT',name:'Vermont',       lean: 75,ev: 3, p:[ 0,+2, 0, 0, 0, 0, 0, 0,-2, 0, 0,+2]},
+  {id:'VA',name:'Virginia',      lean: 30,ev:13, p:[ 0, 0, 0, 0, 0, 0,+2, 0, 0,+2, 0, 0]},
+  {id:'WA',name:'Washington',    lean: 55,ev:12, p:[-2, 0, 0, 0, 0, 0,+2, 0,-2,+2, 0,+2]},
+  {id:'WV',name:'West Virginia', lean:-70,ev: 4, p:[ 0, 0,+2, 0, 0, 0, 0, 0,+2, 0, 0,-2]},
+  {id:'WI',name:'Wisconsin',     lean: 10,ev:10, p:[ 0, 0, 0,+2, 0, 0,+2, 0,-2,+2, 0, 0]},
+  {id:'WY',name:'Wyoming',       lean:-75,ev: 3, p:[ 0, 0,+2, 0, 0, 0, 0,-2, 0,-2, 0, 0]},
+];
+
+// ============================================================
+// LABEL DEFINITIONS
+// ============================================================
+const LABEL_DEFS = [
+  {id:'immig',    hi:{label:'Open Immigration'},    lo:{label:'Restrictive Immigration'}},
+  {id:'lao',      hi:{label:'Tough on Crime'},       lo:{label:'Criminal Justice Reform'}},
+  {id:'sp_h',     hi:{label:'Universal Healthcare'}, lo:{label:'Private Healthcare'}},
+  {id:'sp_m',     hi:{label:'Pro-Military'},         lo:{label:'Low Defense Spending'}},
+  {id:'guns',     hi:{label:'Gun Control'},          lo:{label:'2nd Amendment Rights'}},
+  {id:'abort',    hi:{label:'Pro-Choice'},           lo:{label:'Pro-Life'}},
+  {id:'enrg',     hi:{label:'Clean Energy'},         lo:{label:'Fossil Fuel Industry'}},
+  {id:'tax_low',  hi:{label:'High Low-Income Tax'},  lo:{label:'Low Tax Priority'}},
+  {id:'tax_high', hi:{label:'Tax the Wealthy'},      lo:{label:'Cut High Income Taxes'}},
+  {id:'sp_w',     hi:{label:'Strong Safety Net'},    lo:{label:'Limited Welfare'}},
+  {id:'tar_e',    hi:{label:'Energy Tariffs'},       lo:{label:'Free Energy Trade'}},
+  {id:'tar_l',    hi:{label:'Manufacturing Tariffs'},lo:{label:'Free Manufacturing Trade'}},
+];
+
+function stateVoterLabels(state) {
+  const seen = new Set();
+  const out = [];
+  const stateCoalKeys = new Set();
+  COALITIONS.forEach(coal => {
+    if (coal.labelKey && getCoalStates(coal).includes(state.id)) stateCoalKeys.add(coal.labelKey);
+  });
+  const allCoalKeys = new Set(COALITIONS.map(c => c.labelKey).filter(Boolean));
+  COALITIONS.forEach(coal => {
+    if (!coal.labelKey || !stateCoalKeys.has(coal.labelKey)) return;
+    const def = LABEL_DEFS.find(d => d.hi.label === coal.labelKey || d.lo.label === coal.labelKey);
+    if (!def) return;
+    const v = state.p[IDX[def.id]];
+    let entry = null;
+    if (v <= -1) entry = {label:def.lo.label, pos:'lo', id:def.id};
+    else if (v >= 1) entry = {label:def.hi.label, pos:'hi', id:def.id};
+    if (entry && !seen.has(entry.label)) { seen.add(entry.label); out.push(entry); }
+  });
+  for (const d of LABEL_DEFS) {
+    if (out.length >= 5) break;
+    const v = state.p[IDX[d.id]];
+    let entry = null;
+    if (v <= -1) {
+      const lbl = d.lo.label;
+      if (!allCoalKeys.has(lbl) || stateCoalKeys.has(lbl)) entry = {label:lbl, pos:'lo', id:d.id};
+    } else if (v >= 1) {
+      const lbl = d.hi.label;
+      if (!allCoalKeys.has(lbl) || stateCoalKeys.has(lbl)) entry = {label:lbl, pos:'hi', id:d.id};
+    }
+    if (entry && !seen.has(entry.label)) { seen.add(entry.label); out.push(entry); }
+  }
+  return out.length ? out : [{label:'Moderate / Swing', pos:'mid', id:null}];
+}
+
+// ============================================================
+// GAME STATE
+// ============================================================
+let G = {};
+let currentModalState = null;
+
+function getNumOpp() { return +document.getElementById('cfg-nopp').value; }
+
+function saturate(hex) {
+  const r=parseInt(hex.slice(1,3),16)/255, g=parseInt(hex.slice(3,5),16)/255, b=parseInt(hex.slice(5,7),16)/255;
+  const max=Math.max(r,g,b), min=Math.min(r,g,b), d=max-min;
+  let h=0;
+  if(d>0){switch(max){
+    case r: h=((g-b)/d+(g<b?6:0))/6; break;
+    case g: h=((b-r)/d+2)/6; break;
+    case b: h=((r-g)/d+4)/6; break;
+  }}
+  const l=0.50, q=l+1-l, p2=2*l-q;
+  const hue2rgb=(p,q,t)=>{if(t<0)t+=1;if(t>1)t-=1;if(t<1/6)return p+(q-p)*6*t;if(t<1/2)return q;if(t<2/3)return p+(q-p)*(2/3-t)*6;return p;};
+  return '#'+[h+1/3,h,h-1/3].map(t=>Math.round(hue2rgb(p2,q,t)*255).toString(16).padStart(2,'0')).join('');
+}
+
+function buildCands() {
+  const n = getNumOpp();
+  const g = id => document.getElementById(`cfg-n${id}`).value.trim()||id;
+  const c = id => saturate(document.getElementById(`cfg-c${id}`).value);
+  const e = id => document.getElementById(`cfg-i${id}`).value;
+  const cands = [{id:'player', name:g('p'), color:c('p'), ai:false, policies:defPols(), money:3, coalFunds:{}, eliminated:false}];
+  if (n>=1) cands.push({id:'ai1', name:g('a1'), color:c('a1'), ai:true, policies:defPols(), target:{...IDEO[e('a1')]}, money:3, coalFunds:{}, eliminated:false});
+  if (n>=2) cands.push({id:'ai2', name:g('a2'), color:c('a2'), ai:true, policies:defPols(), target:{...IDEO[e('a2')]}, money:3, coalFunds:{}, eliminated:false});
+  if (n>=3) cands.push({id:'ai3', name:g('a3'), color:c('a3'), ai:true, policies:defPols(), target:{...IDEO[e('a3')]}, money:3, coalFunds:{}, eliminated:false});
+  return cands;
+}
+
+function initGame() {
+  const n = getNumOpp();
+  document.getElementById('opp2-setup').style.display = n>=2?'':'none';
+  document.getElementById('opp3-setup').style.display = n>=3?'':'none';
+  document.getElementById('hst-a2').style.display = n>=2?'':'none';
+  document.getElementById('hst-a3').style.display = n>=3?'':'none';
+  document.getElementById('leg-a2').style.display = n>=2?'':'none';
+  document.getElementById('leg-a3').style.display = n>=3?'':'none';
+
+  G = {
+    week: 1, over: false,
+    candidates: buildCands(),
+    states: SD_RAW.map(s=>{
+      const pBase = [...s.p]; // original explicit priorities — drives weights & coalition membership
+      const p = [...s.p];
+      // Fill non-priority positions with ±2 lean values so states still have opinions on everything,
+      // but give them far lower weight than actual priorities
+      if (s.lean !== 0) {
+        const ls = Math.sign(s.lean);
+        p.forEach((v,i) => { if (v === 0 && LEAN_DIR[i] !== 0) p[i] = ls * LEAN_DIR[i] * 2; });
+      }
+      return {
+        ...s, p, pBase,
+        w: pBase.map(v => v !== 0 ? 8 : 1), // priority = 8, background lean = 1
+        poll: {}, leader: null, rhetoric: {}
+      };
+    }),
+    selectedCoalition: null,
+    difficulty: document.getElementById('cfg-diff').value,
+    coalitionMode: document.getElementById('cfg-coal-mode').value,
+    prevPols: {...defPols()},
+    log: [],
+  };
+  COALITIONS = G.coalitionMode === 'demo' ? DEMO_COALITIONS : POLICY_COALITIONS;
+  renderPolicies();
+  renderAll();
+  updateAllButtonStates();
+  logMsg('Campaign begins! Move one policy per turn. Click states to spend campaign funds on rhetoric.');
+}
+
+// ============================================================
+// SCORING
+// ============================================================
+function polVec(cand) { return PIDS.map(id => cand.policies[id]); }
+
+function candPartisan(pol) {
+  const lib = LIB_IDS.reduce((a,id)=>a+pol[id],0)/LIB_IDS.length;
+  const con = CON_IDS.reduce((a,id)=>a+pol[id],0)/CON_IDS.length;
+  return ((lib - con) + 4) / 8 * 100;
+}
+
+function stateScore(cand, state) {
+  const cv = polVec(cand), sv = state.p, sw = state.w;
+  const wSum = sw.reduce((a,b)=>a+b,0);
+  let dist = 0;
+  // L1 (absolute) distance: two perfect matches genuinely beat three mediocre ones
+  for (let i=0; i<cv.length; i++) dist += sw[i]*Math.abs(cv[i]-sv[i])/4;
+  dist = dist/wSum;
+  const base = Math.max(0.01, Math.exp(-2.8*dist));
+  return Math.min(0.99, base);
+}
+
+function recalcPolls() {
+  const active = G.candidates.filter(c=>!c.eliminated);
+  G.states.forEach(state => {
+    // Pure policy scores — no noise, alignment determines everything
+    const scores={};
+    active.forEach(c=>{ scores[c.id]=stateScore(c,state); });
+
+    // Committed fraction: how many voters are willing to commit to anyone
+    const maxScore = Math.max(...active.map(c=>scores[c.id]));
+    const committed = Math.min(0.95, maxScore * 1.3);
+
+    // Distribute committed share strictly proportional to alignment scores
+    const scoreTotal = active.reduce((a,c)=>a+scores[c.id],0);
+    const np={};
+    active.forEach(c=>{ np[c.id]=(scores[c.id]/scoreTotal)*committed; });
+
+    // Rhetoric: each point steals 1% from every opponent, track gain/loss for display
+    const rhetGain={};
+    active.forEach(c=>{ rhetGain[c.id]=0; });
+    active.forEach(cand=>{
+      const pts=(state.rhetoric&&state.rhetoric[cand.id])||0;
+      if(!pts) return;
+      active.filter(c=>c.id!==cand.id).forEach(opp=>{
+        const steal=Math.min(pts*0.01, np[opp.id]||0);
+        np[opp.id]-=steal;
+        np[cand.id]+=steal;
+        rhetGain[cand.id]+=steal;
+        rhetGain[opp.id]-=steal;
+      });
+    });
+    state.rhetGain=rhetGain;
+
+    // No smoothing — polls instantly reflect current alignment (no noise means no need for dampening)
+    state.poll=np;
+
+    // State goes to whoever leads the polls
+    let best=null,bv=-1;
+    active.forEach(c=>{ if((state.poll[c.id]||0)>bv){bv=state.poll[c.id];best=c.id;} });
+    state.leader = bv > 0 ? best : null;
+  });
+}
+
+function calcEV() {
+  const ev={}; G.candidates.forEach(c=>{ev[c.id]=0;});
+  G.states.forEach(s=>{if(s.leader)ev[s.leader]=(ev[s.leader]||0)+s.ev;});
+  return ev;
+}
+
+// ============================================================
+// DEFICIT
+// ============================================================
+function calcDeficit(pol) {
+  const n = v => (v+2)/4;
+  const rev = (n(pol.tax_low)*0.4+n(pol.tax_high)*0.8)*4.2
+            + (n(pol.tar_e)+n(pol.tar_l))/2*0.55;
+  return 5.5 + n(pol.sp_h)*5.5+n(pol.sp_m)*3.8+n(pol.sp_w)*3.8 - rev;
+}
+
+// ============================================================
+// CHANGE POINTS (1 per turn)
+// ============================================================
+function calcCPUsed() {
+  // Total units of change across all policies (limit: 1 unit per turn)
+  const pc = G.candidates.find(c=>c.id==='player');
+  let total = 0;
+  PIDS.forEach(id => { total += Math.abs((pc.policies[id]??0) - (G.prevPols[id]??0)); });
+  return Math.round(total);
+}
+
+function cpAvail() { return 1; }
+
+// Returns total EVs in coalition and EVs won by cand
+function coalEVStats(coal, cand) {
+  const states = getCoalStates(coal);
+  let total = 0, won = 0;
+  states.forEach(sid => {
+    const st = G.states.find(s=>s.id===sid);
+    if (!st) return;
+    total += st.ev;
+    if (st.leader === cand.id) won += st.ev;
+  });
+  return {total, won, threshold: Math.ceil(total * 0.60)};
+}
+
+// Coalition money earnings — earmarked per coalition, can only be spent in that coalition's states
+function applyCoalBonus(cand) {
+  const earned = [];
+  COALITIONS.forEach(coal => {
+    const {total, won, threshold} = coalEVStats(coal, cand);
+    if (total === 0) return;
+    if (won >= threshold) {
+      cand.coalFunds[coal.name] = (cand.coalFunds[coal.name]||0) + coal.bonus;
+      if (cand.id==='player') earned.push(`${coal.name} +$${coal.bonus}M`);
+    }
+  });
+  return earned;
+}
+
+function totalFunds(cand) {
+  return cand.money + Object.values(cand.coalFunds||{}).reduce((a,b)=>a+b,0);
+}
+
+// Return {coal} to use for spending in a state.
+// Picks the matching coalition with the highest balance so we never block spending
+// when one small coalition fund is found first but another larger one could cover the cost.
+function spendSource(cand, st) {
+  const stateCoals = COALITIONS.filter(coal => getCoalStates(coal).includes(st.id));
+  let best = null, bestAmt = 0;
+  for (const coal of stateCoals) {
+    const amt = cand.coalFunds[coal.name] || 0;
+    if (amt > bestAmt) { best = coal; bestAmt = amt; }
+  }
+  return {coal: best};
+}
+
+// ============================================================
+// AI LOGIC
+// ============================================================
+function aiTurn(cand) {
+  const diff = G.difficulty || 'medium';
+
+  // Easy: move one step in a random direction on a random policy (ignore EV)
+  if (diff === 'easy') {
+    if (Math.random() < 0.45) return; // often does nothing
+    const id = PIDS[Math.floor(Math.random() * PIDS.length)];
+    const dir = Math.random() < 0.5 ? 1 : -1;
+    const next = (cand.policies[id] || 0) + dir;
+    if (next >= -2 && next <= 2) cand.policies[id] = next;
+    return;
+  }
+
+  // Medium / Hard: greedy EV-maximization
+  const active = G.candidates.filter(c => !c.eliminated);
+
+  function simEV(policies) {
+    const fakeCand = { policies };
+    let ev = 0;
+    G.states.forEach(st => {
+      const myScore = stateScore(fakeCand, st);
+      const best = Math.max(...active.filter(c=>c.id!==cand.id).map(c=>{
+        const snapPols = G.turnStartPols && G.turnStartPols[c.id] ? G.turnStartPols[c.id] : c.policies;
+        return stateScore({policies: snapPols}, st);
+      }), 0);
+      if (myScore > best) ev += st.ev;
+    });
+    return ev;
+  }
+
+  const baseEV = simEV(cand.policies);
+  const moves = [];
+  PIDS.forEach(id => {
+    const cur = cand.policies[id] || 0;
+    [-1, 1].forEach(dir => {
+      const next = cur + dir;
+      if (next < -2 || next > 2) return;
+      const newPols = { ...cand.policies, [id]: next };
+      moves.push({ id, dir, gain: simEV(newPols) - baseEV });
+    });
+  });
+
+  // Hard: tiny noise — nearly optimal. Medium: larger noise — beatable.
+  const noiseMag = diff === 'hard' ? 0.8 : 2;
+  moves.sort((a, b) => (b.gain - a.gain) + (Math.random() - 0.5) * noiseMag);
+
+  const best = moves[0];
+  const exploreChance = diff === 'hard' ? 0.07 : 0.15;
+  if (best && (best.gain > 0 || Math.random() < exploreChance)) {
+    cand.policies[best.id] = Math.max(-2, Math.min(2, (cand.policies[best.id] || 0) + best.dir));
+  }
+}
+
+function aiSpend(cand) {
+  const active=G.candidates.filter(c=>!c.eliminated);
+
+  function pollGap(st){
+    const myPoll=st.poll[cand.id]||0;
+    const topPoll=active.length?Math.max(...active.map(c=>st.poll[c.id]||0)):0;
+    return topPoll-myPoll;
+  }
+
+  // How urgently should the AI contest this state to disrupt an opponent's coalition?
+  function sabotageValue(st){
+    let val=0;
+    active.filter(c=>c.id!==cand.id).forEach(opp=>{
+      if(st.leader!==opp.id) return; // opponent must be winning this state
+      COALITIONS.forEach(coal=>{
+        const cs=getCoalStates(coal);
+        if(!cs.includes(st.id)) return;
+        const {won:oppWon,threshold}=coalEVStats(coal,opp);
+        const coalEV=cs.reduce((a,sid)=>{const s=G.states.find(x=>x.id===sid);return a+(s?s.ev:0);},0);
+        const nearThresh=Math.ceil(coalEV*0.10); // within 10% of coalition EVs = "close"
+        if(oppWon>=threshold) val=Math.max(val,coal.bonus*4);            // opp earning — break it
+        else if(oppWon>=threshold-nearThresh) val=Math.max(val,coal.bonus*2); // opp close — block it
+      });
+    });
+    return val;
+  }
+
+  const diff = G.difficulty || 'medium';
+
+  // Easy: spend at most half total funds, pick random affordable states
+  if (diff === 'easy') {
+    const budget = Math.floor(totalFunds(cand) / 2);
+    let spent = 0;
+    const shuffled = G.states.slice().sort(() => Math.random() - 0.5);
+    for (const st of shuffled) {
+      const cost = Math.max(2, Math.floor(st.ev / 2));
+      const {coal} = spendSource(cand, st);
+      const hasCoal = coal && (cand.coalFunds[coal.name]||0) >= cost;
+      const hasGen = cand.money >= cost;
+      if ((!hasCoal && !hasGen) || spent + cost > budget) continue;
+      if (!st.rhetoric) st.rhetoric = {};
+      st.rhetoric[cand.id] = (st.rhetoric[cand.id]||0) + 1;
+      if (hasCoal) cand.coalFunds[coal.name] -= cost;
+      else cand.money -= cost;
+      spent += cost;
+    }
+    return;
+  }
+
+  // Medium / Hard: spend ALL available funds strategically
+  // Hard also considers blocking opponents who are 2 states away from threshold
+  let anySpent=true;
+  while(anySpent){
+    anySpent=false;
+    const options=[];
+    G.states.forEach(st=>{
+      const cost=Math.max(2,Math.floor(st.ev/2));
+      const {coal}=spendSource(cand,st);
+      const hasCoal=coal&&(cand.coalFunds[coal.name]||0)>=cost;
+      const hasGen=cand.money>=cost;
+      if(hasCoal||hasGen){
+        let sab=sabotageValue(st);
+        // Hard: also pre-empt opponents who are 2 states away from threshold
+        if(diff==='hard' && sab===0){
+          active.filter(c=>c.id!==cand.id).forEach(opp=>{
+            if(st.leader!==opp.id) return;
+            COALITIONS.forEach(coal=>{
+              const cs=getCoalStates(coal);
+              if(!cs.includes(st.id)) return;
+              const {won:oppWonH,threshold:threshH}=coalEVStats(coal,opp);
+              const coalEVH=cs.reduce((a,sid)=>{const s=G.states.find(x=>x.id===sid);return a+(s?s.ev:0);},0);
+              if(oppWonH>=threshH-Math.ceil(coalEVH*0.25)) sab=Math.max(sab, coal.bonus*1);
+            });
+          });
+        }
+        const gap=pollGap(st);
+        if(sab===0 && gap<=0) return; // already winning — don't pad leads
+        const score=sab>0?-sab:gap;
+        options.push({st,cost,coal:hasCoal?coal:null,score});
+      }
+    });
+    if(!options.length) break;
+
+    options.sort((a,b)=>a.score-b.score);
+    const {st,cost,coal}=options[0];
+    if(!st.rhetoric) st.rhetoric={};
+    st.rhetoric[cand.id]=(st.rhetoric[cand.id]||0)+1;
+    if(coal) cand.coalFunds[coal.name]-=cost;
+    else cand.money-=cost;
+    anySpent=true;
+  }
+}
+
+// AI policy reconsideration: shift target toward competitive states, away from safe leads
+function aiReconsiderPolicy(cand) {
+  const active=G.candidates.filter(c=>!c.eliminated);
+  const statesWithGap=G.states.map(st=>{
+    const myPoll=st.poll[cand.id]||0;
+    const topPoll=active.length?Math.max(...active.map(c=>st.poll[c.id]||0)):0;
+    return {st, gap:topPoll-myPoll};
+  });
+
+  // Competitive states: trailing but within 15 points — these get targeted
+  const maxStates = (G.difficulty||'medium')==='hard' ? 14 : 8;
+  const competitive=statesWithGap
+    .filter(({gap})=>gap>0&&gap<0.15)
+    .sort((a,b)=>(b.st.ev-a.st.ev)||a.gap-b.gap) // high-EV close states first
+    .slice(0,maxStates);
+
+  if(!competitive.length) return;
+
+  // Compute weighted policy preference of competitive states
+  // Weight = EV / (gap + 0.01) — closer high-EV states dominate
+  const wSum={};
+  PIDS.forEach(id=>{wSum[id]=0;});
+  let totalW=0;
+  competitive.forEach(({st,gap})=>{
+    const w=st.ev/(gap+0.01);
+    totalW+=w;
+    PIDS.forEach((id,i)=>{wSum[id]+=(st.p[i]||0)*w;});
+  });
+
+  const newTarget={};
+  PIDS.forEach(id=>{
+    newTarget[id]=Math.round(Math.max(-2,Math.min(2,wSum[id]/totalW)));
+  });
+  cand.target=newTarget;
+  logMsg(`${cand.name} reconsiders strategy — targeting ${competitive.length} competitive state${competitive.length>1?'s':''}.`);
+}
+
+// ============================================================
+// TURN
+// ============================================================
+function nextWeek() {
+  if (G.over) return;
+  const used = calcCPUsed();
+  if (used > cpAvail()) {
+    document.getElementById('cp-warn').textContent = 'Only 1 policy change per turn allowed.';
+    return;
+  }
+
+  const pc = G.candidates.find(c=>c.id==='player');
+  // Snapshot positions from START of this week (before anyone moves).
+  // Player has already changed sliders, so use G.prevPols for their pre-turn position.
+  G.turnStartPols = {};
+  G.candidates.filter(c=>!c.eliminated).forEach(c=>{
+    G.turnStartPols[c.id] = c.id==='player' ? {...G.prevPols} : {...c.policies};
+  });
+  G.prevPols = {...pc.policies};
+
+  // Income: $3M base (general) + coalition bonuses (earmarked per coalition)
+  G.candidates.filter(c=>!c.eliminated).forEach(c=>{
+    c.money += 1;
+    const earned = applyCoalBonus(c);
+    if(c.id==='player'&&earned.length){
+      logMsg(`Coalition funds: ${earned.join(', ')} — spend only in coalition states!`);
+    }
+  });
+
+  // AI turns — move policy then spend all available funds
+  G.candidates.filter(c=>c.ai&&!c.eliminated).forEach(c=>{ aiTurn(c); aiSpend(c); });
+  recalcPolls();
+
+  G.week++;
+
+  // Elimination helper
+  function doElim(afterWeeks) {
+    if(G.candidates.filter(c=>!c.eliminated).length<=2) return;
+    const ev=calcEV();
+    const active=G.candidates.filter(c=>!c.eliminated).slice().sort((a,b)=>(ev[a.id]||0)-(ev[b.id]||0));
+    const elim=active[0];
+    elim.eliminated=true;
+    G.states.forEach(s=>{if(s.leader===elim.id)s.leader=null;});
+    logMsg(`${elim.name} eliminated after ${afterWeeks} weeks with ${ev[elim.id]||0} EVs.`);
+    if(elim.id==='player'){G.over=true;endGame();}
+  }
+
+  // First elimination at week 11 (after 10 turns played)
+  if(G.week===11) doElim(10);
+  if(G.over) return;
+
+  // Second elimination at week 18 for games starting with 4 candidates
+  if(G.week===18&&G.candidates.length===4) doElim(17);
+  if(G.over) return;
+
+  // AI policy reconsideration at key points based on starting player count
+  const totalCands=G.candidates.length;
+  const reconWeeks=totalCands<=2?[13]:totalCands===3?[6,13]:[6,14,22];
+  if(G.difficulty!=='easy' && reconWeeks.includes(G.week)){
+    G.candidates.filter(c=>c.ai&&!c.eliminated).forEach(aiReconsiderPolicy);
+  }
+
+  logMsg(`Week ${G.week-1} done. Funds: $${pc.money}M general${Object.entries(pc.coalFunds||{}).filter(([,v])=>v>0).map(([k,v])=>`, $${v}M [${k}]`).join('')}.`);
+
+  if (G.week>26) { endGame(); return; }
+
+  document.getElementById('cp-warn').textContent='';
+  renderAll();
+  updateAllButtonStates();
+}
+
+function endGame() {
+  G.over=true;
+  const ev=calcEV();
+  const active=G.candidates.filter(c=>!c.eliminated);
+  const s=active.slice().sort((a,b)=>(ev[b.id]||0)-(ev[a.id]||0));
+  const w=s[0];
+  document.getElementById('gover').classList.add('show');
+  const playerWon=w&&w.id==='player';
+  document.getElementById('go-ttl').innerHTML=playerWon?'You Won!':'You Lost';
+  document.getElementById('go-body').textContent=playerWon
+    ?`You won the presidency with ${ev['player']} electoral votes!`
+    :`${w?w.name:'Someone'} won with ${ev[w?w.id:'']||0} electoral votes. You received ${ev['player']||0}.`;
+  renderAll();
+  // Copy the final map state into the game-over overlay
+  const goMap = document.getElementById('go-map-svg');
+  if (goMap) goMap.innerHTML = document.getElementById('map-svg').innerHTML;
+}
+
+function logMsg(m){ G.log.unshift(m); if(G.log.length>30)G.log.pop(); }
+
+// ============================================================
+// RENDER
+// ============================================================
+function renderAll(){
+  renderHeader(); renderMap();
+  renderCoalitions(); renderCards(); renderLog();
+  updateLegend(); updateCPBar(); renderFundsPanel();
+}
+
+function renderFundsPanel(){
+  const pc=G.candidates.find(c=>c.id==='player');
+  if(!pc) return;
+  const el=document.getElementById('funds-panel');
+  if(!el) return;
+  let html=`<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid #d8cbb8;margin-bottom:6px">
+    <span style="font-size:0.8em;color:#6b5740;font-weight:bold">General funds</span>
+    <span style="font-size:1em;font-weight:bold;color:${pc.money>0?'#2d6a2d':'#8b1a1a'}">$${pc.money}M</span>
+  </div>`;
+  const coalsWithFunds=COALITIONS.filter(coal=>(pc.coalFunds[coal.name]||0)>0);
+  const coalsEmpty=COALITIONS.filter(coal=>!(pc.coalFunds[coal.name]||0)>0);
+  if(coalsWithFunds.length===0&&coalsEmpty.length>0){
+    html+=`<div style="font-size:0.72em;color:#a09070;font-style:italic;text-align:center;padding:4px 0">No coalition funds yet — win ${COALITIONS[0]?COALITIONS[0].name.toLowerCase()+' states':''} to earn earmarked funds.</div>`;
+  }
+  coalsWithFunds.forEach(coal=>{
+    const amt=pc.coalFunds[coal.name]||0;
+    const sel=G.selectedCoalition===coal.name;
+    html+=`<div data-coal="${coal.name}" style="display:flex;justify-content:space-between;align-items:center;padding:5px 6px;margin-bottom:3px;border-radius:4px;border:${sel?'2px':'1px'} solid ${sel?coal.color:'#e8dfc8'};background:${sel?coal.color+'22':'transparent'};cursor:pointer;transition:background 0.12s">
+      <span style="font-size:0.75em;color:${coal.color};font-weight:bold;max-width:160px;line-height:1.2">${coal.name}</span>
+      <span style="font-size:0.95em;font-weight:bold;color:#2d6a2d;white-space:nowrap">$${amt}M</span>
+    </div>`;
+  });
+  const total=pc.money+Object.values(pc.coalFunds||{}).reduce((a,b)=>a+b,0);
+  html+=`<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;margin-top:4px">
+    <span style="font-size:0.78em;color:#2c1810;font-weight:bold">Total</span>
+    <span style="font-size:1em;font-weight:bold;color:#1a3a5c">$${total}M</span>
+  </div>`;
+  el.innerHTML=html;
+  el.querySelectorAll('[data-coal]').forEach(div=>{
+    div.addEventListener('click',()=>{
+      const name=div.dataset.coal;
+      G.selectedCoalition=G.selectedCoalition===name?null:name;
+      renderCoalitions(); renderMap(); renderFundsPanel();
+    });
+  });
+}
+
+function renderHeader(){
+  const ev=calcEV(), pc=G.candidates.find(c=>c.id==='player');
+  const used=calcCPUsed(), avail=1;
+
+  document.getElementById('hd-wk').textContent=`${G.week}/26`;
+  document.getElementById('hd-evp').textContent=ev['player']||0;
+  document.getElementById('hd-evp').style.color=pc.color;
+
+  ['ai1','ai2','ai3'].forEach(aid=>{
+    const cand=G.candidates.find(c=>c.id===aid);
+    const elv=document.getElementById(`hd-ev${aid}`);
+    const lbl=document.getElementById(`hl-${aid}`);
+    if(!cand||!elv) return;
+    elv.textContent=(ev[aid]||0)+(cand.eliminated?' (out)':'');
+    elv.style.color=cand.eliminated?'#888':cand.color;
+    if(lbl) lbl.textContent=cand.name.split(' ').pop()+' EV';
+  });
+
+  const cpEl=document.getElementById('hd-cp');
+  cpEl.textContent=`${avail-used}/${avail}`;
+  cpEl.style.color=used>avail?'#f0c040':used>0?'#f0c040':'#d0e8b0';
+
+  const tot=totalFunds(pc);
+  document.getElementById('hd-money').textContent=`$${tot}M`;
+  document.getElementById('hd-money').style.color=tot<5?'#f08080':tot<15?'#f0c040':'#b0e0b0';
+
+  document.getElementById('btn-next').disabled=G.over;
+}
+
+function renderPolicies(){
+  const pc=G.candidates.find(c=>c.id==='player');
+  buildSlGroup('sl-tax', POL_TAX, pc);
+  buildSlGroup('sl-tariff', POL_TARIFF, pc);
+  buildSlGroup('sl-spend', POL_SPEND, pc);
+  buildSlGroup('sl-social', POL_SOCIAL, pc);
+}
+
+function buildSlGroup(cid, grp, pc){
+  const el=document.getElementById(cid);
+  if (!el) return;
+  el.innerHTML='';
+  grp.forEach(([id,label,left,right,cls])=>{
+    const val=pc.policies[id]??0;
+    const d=document.createElement('div'); d.className='srow';
+    const btns=[-2,-1,0,1,2].map(v=>{
+      const sel=v===val;
+      return `<button class="pb${sel?' sel'+(cls?' '+cls:''):''}" data-v="${v}" data-pid="${id}">${v>0?'+':''}${v}</button>`;
+    }).join('');
+    d.innerHTML=`<label>${label}</label><div class="btn-grp">${btns}</div><div class="ends"><span>${left}</span><span>${right}</span></div>`;
+    el.appendChild(d);
+    d.querySelectorAll('.pb').forEach(btn=>{
+      btn.addEventListener('click',()=>{
+        const nv=+btn.dataset.v;
+        const curV=pc.policies[id]??0;
+        if(nv===curV) return;
+        const saved=pc.policies[id];
+        pc.policies[id]=nv;
+        if(calcCPUsed()>cpAvail()){
+          pc.policies[id]=saved;
+          document.getElementById('cp-warn').textContent='Only 1 policy change allowed per turn.';
+          return;
+        }
+        document.getElementById('cp-warn').textContent='';
+        d.querySelectorAll('.pb').forEach(b=>{
+          b.className='pb'+(+b.dataset.v===nv?' sel'+(cls?' '+cls:''):'');
+        });
+        updateCPBar(); renderHeader(); updateAllButtonStates();
+      });
+    });
+  });
+}
+
+function updateAllButtonStates(){
+  const pc=G.candidates.find(c=>c.id==='player');
+  document.querySelectorAll('.pb').forEach(btn=>{
+    const pid=btn.dataset.pid;
+    const v=+btn.dataset.v;
+    const curV=pc.policies[pid]??0;
+    if(v===curV){ btn.disabled=false; btn.style.opacity='1'; return; }
+    const saved=pc.policies[pid];
+    pc.policies[pid]=v;
+    const wouldUse=calcCPUsed();
+    pc.policies[pid]=saved;
+    btn.disabled=wouldUse>1;
+    btn.style.opacity=wouldUse>1?'0.35':'1';
+  });
+}
+
+function updateCPBar(){
+  const used=calcCPUsed(), avail=1;
+  const pct=Math.min(100,used/avail*100);
+  document.getElementById('cp-used').textContent=`${used} / ${avail}`;
+  document.getElementById('cp-bar-fill').style.width=pct+'%';
+  document.getElementById('cp-bar-fill').style.background=used>avail?'#8b1a1a':used===1?'#b87333':'#1a3a5c';
+}
+
+// ============================================================
+// MAP
+// ============================================================
+function blendToHex(hex,t){
+  const r0=196,g0=184,b0=152;
+  const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);
+  const nr=Math.round(r0+(r-r0)*t),ng=Math.round(g0+(g-g0)*t),nb=Math.round(b0+(b-b0)*t);
+  return `rgb(${nr},${ng},${nb})`;
+}
+
+function getStateFill(st) {
+  const active=G.candidates.filter(c=>!c.eliminated);
+  const srt=active.slice().sort((a,b)=>(st.poll[b.id]||0)-(st.poll[a.id]||0));
+  const margin=srt.length>1?(st.poll[srt[0].id]||0)-(st.poll[srt[1].id]||0):0;
+  // First turn: all neutral; after that, color by poll leader (regardless of >50% threshold)
+  const isFirstTurn = G.week === 1;
+  const pollLeader = !isFirstTurn && srt[0] && (st.poll[srt[0].id]||0) > 0 ? srt[0] : null;
+  // margin >=0.15 → full saturation (1.0); margin <=0.03 → very desaturated (0.12)
+  const t = Math.min(1, Math.max(0, (margin - 0.03) / 0.12));
+  const intensity = 0.12 + t * 0.88;
+  const fill = pollLeader ? blendToHex(pollLeader.color, intensity) : '#c4b898';
+  const stroke = pollLeader ? pollLeader.color : '#a09070';
+  const inWonCoal=COALITIONS.some(coal=>{
+    const cs=getCoalStates(coal);
+    if(!cs.includes(st.id)) return false;
+    const won=cs.filter(sid=>{const s=G.states.find(x=>x.id===sid);return s&&s.leader==='player';}).length;
+    return won>=cs.length-1;
+  });
+  const selCoal=G.selectedCoalition?COALITIONS.find(c=>c.name===G.selectedCoalition):null;
+  const inSelCoal=selCoal&&getCoalStates(selCoal).includes(st.id);
+  const dimmed=selCoal&&!inSelCoal;
+  return {fill,stroke,inWonCoal,inSelCoal,selCoal,dimmed};
+}
+
+const HEX_CELLS={
+  'AK':[[1,2],[0,3],[1,3]],
+  'AL':[[16,20],[16,19],[17,20],[16,21],[17,22],[16,23],[17,19],[17,21],[18,22]],
+  'AR':[[13,16],[13,18],[13,15],[14,16],[13,17],[14,18]],
+  'AZ':[[6,16],[6,18],[6,20],[5,21],[6,15],[7,16],[6,17],[7,18],[6,19],[7,20],[6,21]],
+  'CA':[[0,9],[1,10],[0,11],[1,12],[0,13],[0,15],[1,16],[1,9],[2,10],[1,11],[2,12],[1,13],[2,14],[1,15],[2,16],[1,17],[2,18],[2,9],[3,10],[2,11],[3,12],[2,13],[3,14],[2,15],[3,16],[2,17],[3,18],[2,19],[3,9],[4,10],[3,11],[4,12],[3,13],[4,14],[3,15],[4,16],[3,17],[4,18],[3,19],[4,20],[4,9],[4,11],[5,12],[4,13],[5,14],[4,15],[5,16],[4,17],[5,18],[4,19],[5,20],[5,15],[5,17],[5,19]],
+  'CO':[[8,10],[7,11],[8,12],[7,13],[8,14],[7,15],[8,11],[8,13],[7,14],[8,16]],
+  'CT':[[29,8],[29,7],[30,8],[30,7],[31,8],[31,7],[32,8]],
+  'DC':[[28,14],[27,15],[28,16]],
+  'DE':[[29,13],[30,14],[30,15]],
+  'FL':[[17,23],[18,23],[19,24],[19,26],[19,23],[20,24],[19,25],[20,26],[19,27],[20,28],[20,23],[21,24],[20,25],[21,26],[20,27],[21,28],[20,29],[21,23],[22,24],[21,25],[22,26],[21,27],[22,28],[21,29],[22,23],[22,25],[22,27],[23,28],[22,29],[23,29]],
+  'GA':[[18,20],[18,19],[19,20],[18,21],[19,22],[19,19],[20,20],[19,21],[20,22],[20,19],[21,20],[20,21],[21,22],[21,21],[22,22],[23,22]],
+  'HI':[[1,26],[2,27],[4,28],[3,29]],
+  'IA':[[11,10],[12,10],[11,11],[13,10],[12,11],[13,11]],
+  'ID':[[7,6],[7,8],[7,7],[8,8]],
+  'IL':[[14,10],[14,12],[15,10],[14,11],[15,12],[14,13],[15,14],[14,15],[16,10],[15,11],[16,12],[15,13],[16,14],[15,15],[16,11],[17,12],[16,13],[17,14],[16,15]],
+  'IN':[[18,10],[17,11],[18,12],[17,13],[18,14],[17,15],[19,10],[18,11],[19,12],[18,13],[19,14]],
+  'KS':[[9,12],[9,14],[10,12],[9,13],[10,14],[10,13]],
+  'KY':[[15,16],[16,16],[17,16],[18,16],[18,15],[19,16],[19,15],[20,16]],
+  'LA':[[13,20],[13,22],[13,19],[14,20],[13,21],[14,22],[15,22],[14,23]],
+  'MA':[[29,6],[29,5],[30,6],[30,5],[31,6],[32,4],[31,5],[32,6],[32,5],[33,6],[34,6]],
+  'MD':[[23,13],[24,13],[25,13],[26,14],[26,13],[27,13],[28,13],[29,14],[28,15],[29,15]],
+  'ME':[[31,1],[32,2],[31,3],[32,1]],
+  'MI':[[16,5],[17,6],[17,5],[18,8],[19,6],[18,7],[19,8],[18,9],[20,6],[19,7],[20,8],[19,9],[20,7],[21,8],[20,9]],
+  'MN':[[12,6],[11,7],[12,8],[11,9],[13,6],[12,7],[13,8],[12,9],[14,6],[13,9]],
+  'MO':[[11,12],[11,14],[12,12],[11,13],[12,14],[13,12],[12,13],[13,14],[13,13],[14,14]],
+  'MS':[[14,19],[15,20],[14,21],[15,19],[15,21],[16,22]],
+  'MT':[[8,6],[9,6],[9,7],[8,7]],
+  'NC':[[20,18],[20,17],[21,18],[21,17],[22,18],[22,17],[23,18],[23,17],[24,18],[24,17],[25,18],[25,17],[26,18],[25,19],[26,17]],
+  'ND':[[10,6],[11,6],[10,7]],
+  'NE':[[9,10],[9,9],[10,10],[9,11],[10,11]],
+  'NH':[[30,4],[31,2],[30,3],[31,4]],
+  'NJ':[[27,11],[28,10],[28,12],[29,10],[28,11],[29,12],[30,10],[29,11],[30,12],[31,10],[30,11],[31,12],[30,13],[31,13]],
+  'NM':[[7,17],[8,18],[7,19],[8,20],[7,21]],
+  'NV':[[5,10],[5,9],[6,10],[5,11],[6,12],[5,13]],
+  'NY':[[23,8],[23,7],[24,8],[25,6],[24,7],[25,8],[26,6],[25,7],[26,8],[27,4],[26,5],[27,6],[26,7],[27,8],[28,2],[27,3],[28,4],[27,5],[28,6],[27,7],[28,8],[27,9],[29,2],[28,3],[28,5],[28,7],[28,9],[29,9]],
+  'OH':[[20,10],[19,11],[20,12],[19,13],[20,14],[21,10],[20,11],[21,12],[20,13],[21,14],[20,15],[21,11],[22,12],[21,13],[22,14],[22,11],[22,13]],
+  'OK':[[8,15],[9,15],[10,15],[11,16],[11,15],[12,16],[12,15]],
+  'OR':[[0,7],[0,8],[1,8],[2,8],[3,8],[4,8],[5,8],[6,8]],
+  'PA':[[22,9],[23,10],[23,12],[23,9],[24,10],[23,11],[24,12],[24,9],[25,10],[24,11],[25,12],[25,9],[26,10],[25,11],[26,12],[26,9],[27,10],[26,11],[27,12]],
+  'RI':[[32,7],[33,8],[33,7],[34,8]],
+  'SC':[[21,19],[22,20],[22,19],[23,20],[22,21],[23,19],[24,20],[23,21],[24,19]],
+  'SD':[[10,8],[11,8],[10,9]],
+  'TN':[[14,17],[15,18],[15,17],[16,18],[16,17],[17,18],[17,17],[18,18],[18,17],[19,18],[19,17]],
+  'TX':[[9,16],[8,17],[9,18],[8,19],[9,20],[8,21],[9,22],[9,24],[10,16],[9,17],[10,18],[9,19],[10,20],[9,21],[10,22],[9,23],[10,24],[9,25],[10,17],[11,18],[10,19],[11,20],[10,21],[11,22],[10,23],[11,24],[10,25],[11,17],[12,18],[11,19],[12,20],[11,21],[12,22],[11,23],[11,25],[12,17],[12,19],[12,21],[9,26],[10,26]],
+  'UT':[[6,9],[7,10],[6,11],[7,12],[6,13],[6,14]],
+  'VA':[[21,16],[21,15],[22,16],[23,16],[24,16],[25,14],[24,15],[25,16],[25,15],[26,16],[27,14],[26,15],[27,16]],
+  'VT':[[29,4],[30,2],[29,3]],
+  'WA':[[1,6],[2,6],[1,7],[3,6],[2,7],[4,6],[3,7],[5,6],[4,7],[6,6],[5,7],[6,7]],
+  'WI':[[13,7],[14,8],[14,7],[15,8],[14,9],[15,7],[16,8],[15,9],[16,7],[16,9]],
+  'WV':[[23,14],[22,15],[24,14],[23,15]],
+  'WY':[[7,9],[9,8],[8,9]],
+};
+
+function renderMap(){
+  const svg=document.getElementById('map-svg'); svg.innerHTML='';
+  const R=13, HW=R*Math.sqrt(3), RH=R*1.5, PX=8, PY=8;
+
+  function cellCenter(col,row){ return [col*HW+(row%2===1?HW/2:0)+PX, row*RH+R+PY]; }
+  function hexPts(col,row){
+    const [cx,cy]=cellCenter(col,row), pts=[];
+    for(let i=0;i<6;i++){const a=Math.PI/180*(30+60*i);pts.push(`${(cx+R*Math.cos(a)).toFixed(1)},${(cy+R*Math.sin(a)).toFixed(1)}`);}
+    return pts.join(' ');
+  }
+
+  // Compute centroid per state for labels/rhetoric
+  const stateCent={};
+  Object.entries(HEX_CELLS).forEach(([id,cells])=>{
+    let sx=0,sy=0;
+    cells.forEach(([c,r])=>{const [x,y]=cellCenter(c,r);sx+=x;sy+=y;});
+    stateCent[id]=[sx/cells.length,sy/cells.length];
+  });
+
+  // Collect label data to render after all borders (so text is never covered)
+  const labelData=[];
+
+  G.states.forEach(st=>{
+    const cells=HEX_CELLS[st.id]; if(!cells) return;
+    const {fill,stroke,inWonCoal,inSelCoal,selCoal,dimmed}=getStateFill(st);
+    const g=document.createElementNS('http://www.w3.org/2000/svg','g');
+    g.setAttribute('class','st');
+    if(dimmed) g.setAttribute('opacity','0.3');
+    cells.forEach(([col,row])=>{
+      const poly=document.createElementNS('http://www.w3.org/2000/svg','polygon');
+      poly.setAttribute('class','sr');
+      poly.setAttribute('points',hexPts(col,row));
+      poly.setAttribute('fill',fill);
+      poly.setAttribute('stroke','none');
+      g.appendChild(poly);
+    });
+    g.addEventListener('mouseenter',e=>showTip(e,st));
+    g.addEventListener('mouseleave',hideTip);
+    g.addEventListener('mousemove',moveTip);
+    g.addEventListener('click',()=>showStateModal(st));
+    svg.appendChild(g);
+    // Save label info for top-layer rendering
+    labelData.push({st, cells});
+  });
+
+  // Draw state borders: for each hex edge adjacent to a different state (or map edge), draw a dark line
+  const cellToState={};
+  Object.entries(HEX_CELLS).forEach(([id,cells])=>{cells.forEach(([c,r])=>{cellToState[`${c},${r}`]=id;});});
+
+  const borderG=document.createElementNS('http://www.w3.org/2000/svg','g');
+  borderG.setAttribute('pointer-events','none');
+
+  Object.entries(HEX_CELLS).forEach(([id,cells])=>{
+    cells.forEach(([col,row])=>{
+      const odd=row%2===1;
+      // Edge order matches vertex pairs: v0(30°)→v1(90°)→v2(150°)→v3(210°)→v4(270°)→v5(330°)
+      // In screen coords (y-down): edge0=lower-right, edge1=lower-left, edge2=left,
+      //                            edge3=upper-left, edge4=upper-right, edge5=right
+      const nbrs=odd
+        ?[[col+1,row+1],[col,row+1],[col-1,row],[col,row-1],[col+1,row-1],[col+1,row]]
+        :[[col,row+1],[col-1,row+1],[col-1,row],[col-1,row-1],[col,row-1],[col+1,row]];
+      const [cx,cy]=cellCenter(col,row);
+      const verts=Array.from({length:6},(_,i)=>{const a=Math.PI/180*(30+60*i);return [cx+R*Math.cos(a),cy+R*Math.sin(a)];});
+      nbrs.forEach(([nc,nr],ei)=>{
+        if(cellToState[`${nc},${nr}`]!==id){
+          const v1=verts[ei],v2=verts[(ei+1)%6];
+          const ln=document.createElementNS('http://www.w3.org/2000/svg','line');
+          ln.setAttribute('x1',v1[0].toFixed(1)); ln.setAttribute('y1',v1[1].toFixed(1));
+          ln.setAttribute('x2',v2[0].toFixed(1)); ln.setAttribute('y2',v2[1].toFixed(1));
+          ln.setAttribute('stroke','#1a0a04'); ln.setAttribute('stroke-width','2');
+          ln.setAttribute('stroke-linecap','round');
+          borderG.appendChild(ln);
+        }
+      });
+    });
+  });
+  svg.appendChild(borderG);
+
+  // Coalition highlight: draw a glowing perimeter around selected-coalition states
+  const selCoal = G.selectedCoalition ? COALITIONS.find(c=>c.name===G.selectedCoalition) : null;
+  if (selCoal) {
+    const coalStateIds = new Set(getCoalStates(selCoal));
+
+    // SVG glow filter
+    const defs = document.createElementNS('http://www.w3.org/2000/svg','defs');
+    defs.innerHTML = `<filter id="coal-glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="3" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>`;
+    svg.appendChild(defs);
+
+    const hlG = document.createElementNS('http://www.w3.org/2000/svg','g');
+    hlG.setAttribute('pointer-events','none');
+    hlG.setAttribute('filter','url(#coal-glow)');
+
+    Object.entries(HEX_CELLS).forEach(([id, cells])=>{
+      if (!coalStateIds.has(id)) return;
+      cells.forEach(([col,row])=>{
+        const odd = row%2===1;
+        const nbrs = odd
+          ? [[col+1,row+1],[col,row+1],[col-1,row],[col,row-1],[col+1,row-1],[col+1,row]]
+          : [[col,row+1],[col-1,row+1],[col-1,row],[col-1,row-1],[col,row-1],[col+1,row]];
+        const [cx,cy] = cellCenter(col,row);
+        const verts = Array.from({length:6},(_,i)=>{const a=Math.PI/180*(30+60*i);return [cx+R*Math.cos(a),cy+R*Math.sin(a)];});
+        nbrs.forEach(([nc,nr],ei)=>{
+          const nState = cellToState[`${nc},${nr}`];
+          // Draw highlight on edges that face outside the coalition (different state or map edge)
+          if (!coalStateIds.has(nState)) {
+            const v1=verts[ei], v2=verts[(ei+1)%6];
+            const ln = document.createElementNS('http://www.w3.org/2000/svg','line');
+            ln.setAttribute('x1',v1[0].toFixed(1)); ln.setAttribute('y1',v1[1].toFixed(1));
+            ln.setAttribute('x2',v2[0].toFixed(1)); ln.setAttribute('y2',v2[1].toFixed(1));
+            ln.setAttribute('stroke', selCoal.color);
+            ln.setAttribute('stroke-width','3.5');
+            ln.setAttribute('stroke-linecap','round');
+            hlG.appendChild(ln);
+          }
+        });
+      });
+    });
+    svg.appendChild(hlG);
+  }
+
+  // Label layer — drawn last so text is always above hex fills, borders, and highlights
+  const labelG=document.createElementNS('http://www.w3.org/2000/svg','g');
+  labelG.setAttribute('pointer-events','none');
+  labelData.forEach(({st,cells})=>{
+    if(cells.length<3) return;
+    const [cx,cy]=stateCent[st.id];
+    const lbl=mkTxt(cx,cy+1,st.id,12,'bold','white');
+    lbl.setAttribute('stroke','#000');
+    lbl.setAttribute('stroke-width','2.5');
+    lbl.setAttribute('paint-order','stroke');
+    labelG.appendChild(lbl);
+  });
+  svg.appendChild(labelG);
+}
+
+// ============================================================
+// STATE MODAL + SPENDING
+// ============================================================
+function closeSmod(){ document.getElementById('smod').classList.remove('show'); currentModalState=null; }
+
+function spendOnState(st) {
+  if (!st) return;
+  const pc = G.candidates.find(c=>c.id==='player');
+  const cost = Math.max(2, Math.floor(st.ev/2));
+  const {coal} = spendSource(pc, st);
+  const hasCoalFund = coal && (pc.coalFunds[coal.name]||0) >= cost;
+  const hasGeneral = pc.money >= cost;
+  if (!hasCoalFund && !hasGeneral) {
+    document.getElementById('cp-warn').textContent=`Need $${cost}M — insufficient funds!`;
+    return;
+  }
+  if (!st.rhetoric) st.rhetoric = {};
+  st.rhetoric['player'] = (st.rhetoric['player']||0) + 1;
+  if (hasCoalFund) { pc.coalFunds[coal.name] -= cost; logMsg(`Spent $${cost}M [${coal.name}] on rhetoric in ${st.name}.`); }
+  else { pc.money -= cost; logMsg(`Spent $${cost}M on rhetoric in ${st.name}.`); }
+  recalcPolls();
+  renderMap();
+  renderHeader();
+  renderSpendSection(st);
+}
+
+function renderSpendSection(st) {
+  const pc = G.candidates.find(c=>c.id==='player');
+  const cost = Math.max(2, Math.floor(st.ev/2));
+  if (!st.rhetoric) st.rhetoric = {};
+  const curPts = st.rhetoric['player'] || 0;
+  const {coal} = spendSource(pc, st);
+  const hasCoalFund = coal && (pc.coalFunds[coal.name]||0) >= cost;
+  const canAfford = hasCoalFund || pc.money >= cost;
+  // Only count funds actually usable in this state: general + matching coalition funds
+  const stateCoalFunds = COALITIONS.filter(c => getCoalStates(c).includes(st.id))
+    .reduce((sum, c) => sum + (pc.coalFunds[c.name]||0), 0);
+  const fundsAvailHere = pc.money + stateCoalFunds;
+
+  document.getElementById('smod-spend-hdr').textContent = `Spend Campaign Funds: $${fundsAvailHere}M available here`;
+
+  const html = `<div style="display:flex;align-items:center;gap:14px;margin-top:4px">
+    <button onclick="spendOnState(currentModalState)"
+      style="background:${canAfford?'#1a3a5c':'#c4a882'};color:${canAfford?'#f5efe0':'#6b5740'};
+      border:none;border-radius:4px;padding:9px 20px;cursor:${canAfford?'pointer':'not-allowed'};
+      font-family:'Times New Roman',serif;font-size:0.92em;font-weight:bold;"
+      ${!canAfford?'disabled':''}>
+      Spend $${cost}M &rarr; +1 Rhetoric
+    </button>
+    <span style="font-size:1em;font-weight:bold;color:#1a3a5c">${curPts} pt${curPts!==1?'s':''} purchased</span>
+  </div>`;
+
+  document.getElementById('smod-spend').innerHTML = html;
+}
+
+function showStateModal(st) {
+  currentModalState = st;
+  const pc = G.candidates.find(c=>c.id==='player');
+  const active = G.candidates.filter(c=>!c.eliminated);
+  const wSum = st.w.reduce((a,b)=>a+b,0);
+
+  const polData = PIDS.map((id,i)=>({
+    id, i,
+    label: ALL_P.find(p=>p[0]===id)?.[1] || id,
+    sv: st.p[i],
+    sw: st.w[i],
+    importance: st.w[i] * Math.abs(st.p[i]),
+    cands: active.map(c=>({
+      c, pos: polVec(c)[i],
+      gap: Math.abs(polVec(c)[i]-st.p[i]),
+      contrib: st.w[i]*Math.pow((polVec(c)[i]-st.p[i])/4,2)/wSum
+    }))
+  })).filter(r=>r.sw>0).sort((a,b)=>b.importance-a.importance);
+
+  const lean=st.lean;
+  const leanLabel=lean<=-60?'Solid R':lean<=-30?'Likely R':lean<=-10?'Lean R':lean<=10?'Toss-up':lean<=30?'Lean D':lean<=60?'Likely D':'Solid D';
+  const leanColor=lean<0?'#8b1a1a':lean>0?'#1a3a5c':'#b87333';
+
+  const rhetCost=Math.max(2,Math.floor(st.ev/2));
+  document.getElementById('smod-title').innerHTML=`${st.name} &mdash; ${st.ev} Electoral Votes <span style="font-size:0.65em;color:#6b5740;font-weight:normal;margin-left:10px">$${rhetCost}M per rhetoric point</span>`;
+  document.getElementById('smod-lean').innerHTML=`Baseline lean: <span style="color:${leanColor};font-weight:bold">${leanLabel}</span>`;
+
+  const sortedC=active.slice().sort((a,b)=>(st.poll[b.id]||0)-(st.poll[a.id]||0));
+  const totalCommitted=active.reduce((a,c)=>a+(st.poll[c.id]||0),0);
+  const undecidedPct=Math.round(Math.max(0,1-totalCommitted)*100);
+  const pollRows=sortedC.map(c=>{
+    const pct=Math.round((st.poll[c.id]||0)*100);
+    const isLead=c.id===st.leader;
+    const rhetRaw=(st.rhetGain&&st.rhetGain[c.id])||0;
+    const rhetPct=Math.round(rhetRaw*100);
+    const rhetTag=rhetPct>0
+      ? `<span style="font-size:0.82em;color:#2d6a2d;margin-left:5px">(+${rhetPct}% rhetoric)</span>`
+      : rhetPct<0
+      ? `<span style="font-size:0.82em;color:#8b1a1a;margin-left:5px">(${rhetPct}% rhetoric)</span>`
+      : '';
+    return `<div style="margin-bottom:6px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px;font-size:0.8em">
+        <span style="color:#2c1810;font-weight:${isLead?'bold':'normal'}">${c.name}${isLead?' [leading]':''}${rhetTag}</span>
+        <span style="color:#2c1810;font-weight:${isLead?'bold':'normal'}">${pct}%</span>
+      </div>
+      <div style="background:#d8cbb8;border-radius:3px;height:7px;overflow:hidden">
+        <div style="width:${pct}%;height:100%;background:${c.color};border-radius:3px;transition:width .3s"></div>
+      </div></div>`;
+  }).join('');
+  const undecRow=undecidedPct>2?`<div style="margin-bottom:6px">
+    <div style="display:flex;justify-content:space-between;margin-bottom:2px;font-size:0.8em">
+      <span style="color:#8b7050;font-style:italic">Undecided voters</span>
+      <span style="color:#8b7050">${undecidedPct}%</span>
+    </div>
+    <div style="background:#d8cbb8;border-radius:3px;height:7px;overflow:hidden">
+      <div style="width:${undecidedPct}%;height:100%;background:#c4a882;border-radius:3px"></div>
+    </div></div>`:'';
+  document.getElementById('smod-polls').innerHTML=pollRows+undecRow;
+
+  const posLbl=v=>v===-2?'Far Left':v===-1?'Left':v===0?'Center':v===1?'Right':'Far Right';
+  const gapColor=gap=>gap===0?'#2d6a2d':gap===2?'#b87333':gap>=4?'#8b1a1a':'#6b5740';
+
+  const top=polData.slice(0,9);
+  const candHdrs=active.map(c=>`<th style="padding:4px 6px;color:#2c1810;font-size:0.73em;text-align:center;white-space:nowrap">${c.name.split(' ').pop()}</th>`).join('');
+  const rows=top.map(r=>{
+    const wPct=Math.round(r.sw/wSum*100);
+    const candCells=active.map(c=>{
+      const cp=r.cands.find(x=>x.c.id===c.id);
+      const col=gapColor(cp.gap);
+      const icon=cp.gap===0?'+':cp.gap<=2?'~':'-';
+      return `<td style="padding:4px 6px;text-align:center;font-size:0.74em;color:${col}">${icon} ${posLbl(cp.pos)}</td>`;
+    }).join('');
+    return `<tr style="border-bottom:1px solid #d8cbb8">
+      <td style="padding:4px 6px;font-size:0.76em;color:#2c1810">${r.label}</td>
+      <td style="padding:4px 6px;text-align:center;font-size:0.72em;color:#6b5740">${wPct}%</td>
+      <td style="padding:4px 6px;text-align:center;font-size:0.74em;color:#1a3a5c;font-weight:bold">${r.sv===0?'Neutral':posLbl(r.sv)}</td>
+      ${candCells}
+    </tr>`;
+  }).join('');
+  document.getElementById('smod-policies').innerHTML=
+    `<table style="width:100%;border-collapse:collapse">
+      <thead><tr style="border-bottom:2px solid #c4a882">
+        <th style="padding:4px 6px;font-size:0.73em;color:#6b5740;text-align:left">Policy</th>
+        <th style="padding:4px 6px;font-size:0.73em;color:#6b5740;text-align:center">Wt.</th>
+        <th style="padding:4px 6px;font-size:0.73em;color:#1a3a5c;text-align:center">State Wants</th>
+        ${candHdrs}
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table>`;
+
+  renderSpendSection(st);
+  document.getElementById('smod').classList.add('show');
+}
+
+function mkTxt(x,y,text,size,weight,fill){
+  const t=document.createElementNS('http://www.w3.org/2000/svg','text');
+  t.setAttribute('x',x); t.setAttribute('y',y);
+  t.setAttribute('text-anchor','middle'); t.setAttribute('dominant-baseline','middle');
+  t.setAttribute('font-size',size); t.setAttribute('font-weight',weight);
+  t.setAttribute('font-family','Times New Roman,serif'); t.setAttribute('fill',fill);
+  t.textContent=text; return t;
+}
+
+// ============================================================
+// TOOLTIP
+// ============================================================
+function showTip(e,st){
+  const pc=G.candidates.find(c=>c.id==='player');
+  const active=G.candidates.filter(c=>!c.eliminated);
+  const totalComm=active.reduce((a,c)=>a+(st.poll[c.id]||0),0);
+  const undecTip=Math.round(Math.max(0,1-totalComm)*100);
+  const pollHtml=active.map(c=>{
+    const p=Math.round((st.poll[c.id]||0)*100), il=c.id===st.leader;
+    return `<div class="tr"><span style="color:${c.color};font-weight:${il?'bold':'normal'}">${c.name}</span><span style="color:${c.color};font-weight:${il?'bold':'normal'}">${p}%</span></div>`;
+  }).join('')+(undecTip>2?`<div class="tr"><span style="color:#8b7050;font-style:italic">Undecided</span><span style="color:#8b7050">${undecTip}%</span></div>`:'')+(!st.leader?`<div style="color:#8b7050;font-size:0.88em;margin-top:3px;font-style:italic">No majority — undecided wins</div>`:'');
+
+  const labels=stateVoterLabels(st);
+  const tagHtml=labels.map(({label,pos,id})=>{
+    if(!id) return `<span class="tag">${label}</span>`;
+    const pv=pc.policies[id];
+    const ok=(pos==='hi')?pv>=1:pv<=-1;
+    return `<span class="tag ${ok?'match':'mismatch'}">${ok?'+':'-'} ${label}</span>`;
+  }).join('');
+
+  const rhetPts=G.candidates.filter(c=>!c.eliminated&&(st.rhetoric&&st.rhetoric[c.id])>0)
+    .map(c=>`<span style="color:${c.color}">${c.name}: ${st.rhetoric[c.id]} pts</span>`).join(' ');
+
+  document.getElementById('tt-name').textContent=`${st.name} — ${st.ev} EV`;
+  document.getElementById('tt-polls').innerHTML=pollHtml;
+  document.getElementById('tt-tags').innerHTML=tagHtml;
+  document.getElementById('tt-rhet').innerHTML=rhetPts?`<span style="color:#6b5740">Rhetoric: </span>${rhetPts}`:'';
+  document.getElementById('tip').style.display='block';
+  moveTip(e);
+}
+function hideTip(){ document.getElementById('tip').style.display='none'; }
+function moveTip(e){
+  const t=document.getElementById('tip');
+  if(t.style.display==='none') return;
+  let l=e.clientX+15, tp=e.clientY+15;
+  if(l+265>window.innerWidth) l=e.clientX-270;
+  if(tp+280>window.innerHeight) tp=e.clientY-285;
+  t.style.left=l+'px'; t.style.top=tp+'px';
+}
+
+// ============================================================
+// COALITIONS PANEL
+// ============================================================
+function renderCoalitions(){
+  const cont=document.getElementById('coal-list');
+  cont.innerHTML='';
+  COALITIONS.forEach(coal=>{
+    const states=getCoalStates(coal);
+    const playerCand={id:'player',eliminated:false};
+    const {total:totalEV, won:wonEV, threshold}=coalEVStats(coal, {id:'player'});
+    const earning=totalEV>0&&wonEV>=threshold;
+    const pct=totalEV>0?Math.round(wonEV/totalEV*100):0;
+    const threshPct=totalEV>0?Math.round(threshold/totalEV*100):100;
+    const sel=G.selectedCoalition===coal.name;
+    const div=document.createElement('div'); div.className='coal';
+    div.style.borderColor=sel?coal.color:(earning?coal.color:'#c4a882');
+    div.style.borderWidth=sel?'2px':'1px';
+    div.style.background=sel?`${coal.color}22`:(earning?`${coal.color}15`:'#f0e8d8');
+    const subtitle = coal.labelKey ? `Issue: ${coal.labelKey}` : (coal.desc || '');
+    div.innerHTML=`<div class="cn" style="color:${(sel||earning)?coal.color:'#2c1810'}">${coal.name}${earning?' +$'+coal.bonus+'M/turn':''}</div>
+      ${subtitle?`<div style="color:${coal.color};font-size:0.76em;margin-bottom:2px;opacity:0.85">${subtitle}</div>`:''}
+      <div style="color:#6b5740;font-size:0.9em">${wonEV}/${totalEV} EVs (need ${threshold}) — ${states.join(', ')}</div>
+      <div class="cprog" style="position:relative"><div class="cfill" style="width:${pct}%;background:${coal.color}"></div><div style="position:absolute;top:0;left:${threshPct}%;width:2px;height:100%;background:#8b1a1a;opacity:0.6"></div></div>`;
+    div.addEventListener('click',()=>{
+      G.selectedCoalition=sel?null:coal.name;
+      renderCoalitions(); renderMap();
+    });
+    cont.appendChild(div);
+  });
+}
+
+// ============================================================
+// CARDS + LOG
+// ============================================================
+function renderCards(){
+  const ev=calcEV(), cont=document.getElementById('cand-cards');
+  cont.innerHTML='';
+  G.candidates.forEach(cand=>{
+    const cp=Math.round(candPartisan(cand.policies));
+    const ideo=cp<28?'Conservative':cp<42?'Center-Right':cp<58?'Center':cp<72?'Center-Left':'Liberal';
+    const div=document.createElement('div'); div.className='ccard';
+    div.style.borderLeftColor=cand.eliminated?'#888':cand.color;
+    div.style.opacity=cand.eliminated?'0.5':'1';
+    div.innerHTML=`<div class="cn2" style="color:${cand.eliminated?'#888':cand.color}">${cand.name}
+        ${cand.eliminated?'<span class="elim-badge">ELIMINATED</span>':''}
+        <span style="color:#6b5740;font-weight:normal;font-size:0.88em">${ev[cand.id]||0} EV | ${ideo}</span></div>
+      <div class="cs">
+        Tax L/H: ${cand.policies.tax_low}/${cand.policies.tax_high} | Healthcare: ${cand.policies.sp_h}<br>
+        Military: ${cand.policies.sp_m} | Immigration: ${cand.policies.immig}<br>
+        ${cand.id==='player'?`Funds: <span style="color:#2d6a2d">$${cand.money}M</span>`:'Funds: AI managed'}
+      </div>`;
+    cont.appendChild(div);
+  });
+}
+
+function renderLog(){
+  const el=document.getElementById('log');
+  el.innerHTML=G.log.map(m=>`<p>${m}</p>`).join('')||'<p style="color:#a09070;font-style:italic">No events yet.</p>';
+}
+
+function updateLegend(){
+  G.candidates.forEach((c,i)=>{
+    const key=i===0?'p':['a1','a2','a3'][i-1];
+    const b=document.getElementById(`lgb-${key}`), n=document.getElementById(`lgn-${key}`);
+    if(b) b.style.background=c.eliminated?'#888':c.color;
+    if(n) n.textContent=c.name+(c.eliminated?' (out)':'');
+  });
+}
+
+// ============================================================
+// EVENTS
+// ============================================================
+document.getElementById('btn-next').addEventListener('click', nextWeek);
+document.getElementById('btn-r').addEventListener('click',()=>{
+  document.getElementById('gover').classList.remove('show');
+  initGame();
+});
+document.getElementById('btn-apply').addEventListener('click', initGame);
+document.getElementById('cfg-coal-mode').addEventListener('change', initGame);
+document.getElementById('cfg-nopp').addEventListener('change',()=>{
+  const n=+document.getElementById('cfg-nopp').value;
+  document.getElementById('opp2-setup').style.display=n>=2?'':'none';
+  document.getElementById('opp3-setup').style.display=n>=3?'':'none';
+  initGame();
+});
+
+initGame();
+
+</script>
+</body>
+</html>
