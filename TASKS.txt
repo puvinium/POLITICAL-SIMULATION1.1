@@ -1,0 +1,53 @@
+POLITICAL SIMULATION - PENDING TASKS
+=====================================
+
+1. MONEY COUNTER SYSTEM
+   - Add money counter for player and each AI candidate
+   - Clicking a state opens option to spend money on that state
+   - Spending adds "[candidate name] rhetoric" as a weighted preference
+   - More EV-heavy states cost significantly more to influence
+   - Weight of rhetoric scales with amount spent
+   - AI candidates also spend money on states (automated)
+
+2. ONE POLICY CHANGE PER TURN
+   - Each turn allow exactly ONE policy change point (not multiple)
+   - Player can only move one slider by one step per turn
+
+3. COALITION REWARD = MONEY
+   - Change coalition bonus from CP (change points) to money
+   - Winning/holding a coalition grants money for rhetoric spending
+
+4. LAST-PLACE ELIMINATION
+   - After 10 turns, the last-place candidate (fewest EVs) is eliminated
+   - Continue eliminating last place every 10 turns? (TBD)
+
+5. REMOVE DUPLICATE IMMIGRATION SLIDER
+   - There are two immigration-related sliders: 'immig' and 'sp_i'
+   - Remove one (likely sp_i = immigration spending, keep immig = immigration policy)
+   - Update all state p[] arrays accordingly (shift indices)
+
+6. REMOVE MIDDLE INCOME TAX SLIDER
+   - Currently 3 tax sliders: tax_low, tax_mid, tax_high
+   - Remove tax_mid (middle income tax)
+   - Keep only tax_low and tax_high
+   - Update all state p[] arrays accordingly (shift indices)
+
+7. SNAP STATE PREFERENCES TO FAR/CENTER ONLY
+   - All state p[] values must be -2, 0, or +2 only
+   - No ±1 values allowed (snap: -1 → 0 or -2, +1 → 0 or +2)
+   - Review each state and decide appropriate snap direction
+
+8. VISUAL REDESIGN
+   - Font: Times New Roman throughout
+   - Background: beige (#f5f0e8 or similar)
+   - Accents: earthy red (#8b2020 or #c0392b), white, blue (#1a3a5c or similar)
+   - Apply to: panels, buttons, sliders, modal, map background, text
+
+COMPLETED TASKS
+===============
+- Replace geographic SVG map with square tile cartogram
+- Fix coalition label inconsistency
+- Fix scoring (remove deficit penalty, improve poll responsiveness)
+- Add click-a-state modal (policy alignment breakdown)
+- Reweight state preferences (2-3 dominant priorities at weight 15)
+- Fix poll initialization bias (remove recalcPolls from initGame)

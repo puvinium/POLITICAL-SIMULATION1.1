@@ -1,0 +1,80 @@
+POLITICAL CAMPAIGN SIMULATION - DESIGN DOCUMENT
+================================================
+
+Create a single-page HTML + JavaScript political campaign simulation for a U.S. presidential election. The goal is to produce a bare-bones but structurally robust foundation that can later be expanded into a complex strategy simulation.
+
+GAME STRUCTURE
+--------------
+- Turn-based gameplay.
+- The player is a candidate competing against 2-3 AI candidates.
+- Each turn represents one week of a campaign.
+- The campaign runs for a fixed number of turns (20-30).
+- Each turn the player can adjust policy sliders and allocate campaign effort.
+
+POLICY SYSTEM
+-------------
+Create several continuous policy sliders (0-100 scale), such as:
+- Economic policy (government spending vs market)
+- Taxation
+- Immigration
+- Environmental regulation
+- Social policy
+- Trade/globalization
+
+Policies should exist as numeric vectors so they can be used in mathematical calculations.
+
+STATE PREFERENCE MODEL
+----------------------
+Include all 50 U.S. states.
+
+For each state define:
+- Baseline partisan lean
+- Issue importance weights (economy, immigration, environment, etc.)
+- Policy preference vector
+
+These values should be loosely based on recent historical tendencies (e.g., energy states prioritize energy policy, industrial states prioritize trade and jobs, etc.).
+
+Use a scoring function that determines candidate support in each state based on:
+- Distance between candidate policy vector and state preference vector
+- Candidate campaign spending in that state
+- Random campaign volatility
+- Baseline partisan lean
+
+Use a mathematical model such as weighted distance scoring or logistic probability to convert this into vote share.
+
+AI CANDIDATES
+-------------
+Create simple AI opponents that:
+- Have their own policy vectors
+- Adjust strategy slightly each turn
+- Allocate campaign resources to competitive states
+
+AI behavior should be rule-based but structured so it can later be replaced with more advanced logic.
+
+TURN RESOLUTION
+---------------
+Each turn should:
+- Update state support levels
+- Show polling estimates per state
+- Update electoral vote projections
+
+INTERFACE
+---------
+Basic but functional UI:
+- Policy sliders
+- Map or list of states with polling numbers
+- Turn counter
+- Electoral vote totals
+- Button to advance to next turn
+
+CODE DESIGN
+-----------
+Write the JavaScript so that:
+- State data is stored in structured objects
+- Policy vectors and weights are easily editable
+- The scoring model is clearly separated in functions
+- The code can easily be expanded later with additional policies, events, demographics, or campaign actions.
+
+The simulation does not need detailed graphics, but the underlying model should be mathematically sound and modular so it can support a more complex simulation later.
+
+Return a single working HTML file containing the simulation.
